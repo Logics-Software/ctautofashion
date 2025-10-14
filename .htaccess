@@ -1,0 +1,24 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Handle routing - redirect all requests to index.php except existing files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Exclude uploads directory from routing
+RewriteCond %{REQUEST_URI} !^/ctautofashion/uploads/
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Fallback for servers without mod_rewrite
+<IfModule !mod_rewrite.c>
+    ErrorDocument 404 /index.php
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Security headers (optional - may not be supported on all servers)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>

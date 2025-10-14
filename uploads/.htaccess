@@ -1,0 +1,17 @@
+# Allow access to uploaded files
+
+Options -Indexes
+
+# Allow all file types for uploads
+
+<Files "\*">
+Require all granted
+</Files>
+
+# Set proper MIME types for images
+
+<IfModule mod_mime.c>
+    AddType image/jpeg .jpg .jpeg
+    AddType image/png .png
+    AddType image/gif .gif
+</IfModule>
