@@ -30,11 +30,11 @@ $title = 'Login';
         
         <form method="POST" action="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/login">
             <div class="form-group">
-                <label for="userid" class="form-label">
+                <label for="userid" class="form-label-login">
                     <i class="fas fa-user icon"></i>User ID
                 </label>
                 <input type="text" 
-                       class="form-control" 
+                       class="form-control form-control-login" 
                        id="userid" 
                        name="userid" 
                        placeholder="Masukkan User ID"
@@ -43,12 +43,12 @@ $title = 'Login';
             </div>
             
             <div class="form-group">
-                <label for="password" class="form-label">
+                <label for="password" class="form-label-login">
                     <i class="fas fa-lock icon"></i>Password
                 </label>
                 <div class="password-input-group">
                     <input type="password" 
-                           class="form-control" 
+                           class="form-control form-control-login" 
                            id="password" 
                            name="password" 
                            placeholder="Masukkan Password"

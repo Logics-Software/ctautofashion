@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
-    <title><?php echo isset($title) ? $title . ' - ' : ''; ?>CTAutoFashion</title>
+    <title><?php echo isset($title) ? $title . ' - ' : ''; ?>CT AutoFashion</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/images/icon.png">
