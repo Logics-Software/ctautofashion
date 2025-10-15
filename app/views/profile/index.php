@@ -6,7 +6,7 @@ $title = 'Profile Saya';
     <div class="main-container fade-in">
         <div class="row me-0">
             <div class="col-12">
-                <h2>Edit Profil</h2>
+                <h4>Edit Profil</h4>
             </div>
         </div>
         

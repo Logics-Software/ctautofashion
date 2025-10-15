@@ -17,7 +17,7 @@ $title = 'Dashboard';
     <div class="main-container fade-in">
         <div class="row">
             <div class="col-12">
-                <h3><i class="fa-solid fa-gauge me-2"></i></i>Dashboard</h3>
+                <h4><i class="fa-solid fa-gauge me-2"></i></i>Dashboard</h4>
             </div>
         </div>
         
@@ -127,7 +127,7 @@ $title = 'Dashboard';
                         <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
                         <h6 class="card-title fw-bold">Informasi Harga dan Stok Barang</h6>
                         <p class="card-text text-muted small">Lihat informasi harga dan stok barang terbaru</p>
-                        <a href="#" class="btn btn-outline-warning btn-sm">
+                        <a href="/products" class="btn btn-outline-warning btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>

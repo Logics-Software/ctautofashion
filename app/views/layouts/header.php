@@ -100,7 +100,7 @@ if ($is_logged_in) {
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="#">
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products">
                                 <i class="fa-solid fa-money-bill-trend-up me-2"></i>Informasi Stok & Harga
                             </a>
                         </li>

@@ -962,7 +962,7 @@ body.not-logged-in .main-content {
 
   .form-control {
     padding: 5px 10px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     border-radius: 5px;
   }
 
@@ -1262,5 +1262,208 @@ body.not-logged-in .main-content {
 }
 
 /* ========================================
-   END OF STYLES
+   17. MAIN TABLE STYLES
+   ======================================== */
+
+/* Main Table Container */
+.main-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: white;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+  border: 1px solid #dadcdf;
+}
+
+/* Main Table Header */
+.main-table thead th {
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  background: #676768;
+  color: white;
+  font-weight: 600;
+  padding: 1rem 0.75rem;
+  border: 1px solid #dadcdf;
+  border-bottom: 2px solid #dadcdf;
+  position: relative;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.main-table thead th.sortable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.main-table thead th.sortable:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+}
+
+.main-table thead th.sortable i {
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.main-table thead th.sortable:hover i {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Main Table Body */
+.main-table tbody tr {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #dadcdf;
+}
+
+.main-table tbody tr:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.05) 0%,
+    rgba(118, 75, 162, 0.05) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.main-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Add vertical borders for header columns */
+.main-table thead th:not(:last-child) {
+  border-right: 1px solid #dadcdf;
+}
+
+/* Remove duplicate border from header since it's already defined */
+.main-table thead th {
+  border-left: none;
+  border-top: none;
+}
+
+.main-table tbody td {
+  padding: 0.5rem 0.5rem;
+  border: 1px solid #dadcdf;
+  border-top: none;
+  border-left: none;
+  vertical-align: middle;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+/* Product Name Styling */
+.main-table tbody td.data-utama {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Price Styling */
+.main-table tbody td.data-harga {
+  font-weight: 600;
+  color: #197c30;
+  font-size: 0.9rem;
+}
+
+/* Stock Styling */
+.main-table tbody td.data-stok .badge {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.main-table tbody td.data-stok .badge.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.main-table tbody td.data-stok .badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%) !important;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+/* Empty State */
+.main-table tbody tr td[colspan] {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.main-table tbody tr td[colspan] i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  display: block;
+}
+
+/* Table Responsive */
+@media (max-width: 768px) {
+  .main-table {
+    font-size: 0.8rem;
+  }
+
+  .main-table thead th {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .main-table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .main-table tbody td:last-child .badge {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* Table Sorting Indicators */
+.main-table .sort-indicator {
+  display: inline-block;
+  margin-left: 0.5rem;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.main-table .sort-indicator.active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Table Loading State */
+.main-table.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.main-table.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   END OF TABLE STYLES
    ======================================== */

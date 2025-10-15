@@ -115,6 +115,9 @@ $router->addRoute('POST', '/profile/change-password', 'ProfileController', 'chan
 $router->addRoute('POST', '/profile/upload-photo', 'ProfileController', 'uploadPhoto');
 $router->addRoute('POST', '/profile/delete-photo', 'ProfileController', 'deletePhoto');
 
+// Product routes
+$router->addRoute('GET', '/products', 'ProductController', 'index');
+
 // Dispatch the request
 $router->dispatch();
 ?>

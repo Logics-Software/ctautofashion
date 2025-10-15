@@ -6,7 +6,7 @@ $title = 'Ganti Password';
     <div class="main-container fade-in">
         <div class="row me-0">
             <div class="col-12">
-                <h2>Ganti Password</h2>
+                <h4>Ganti Password</h4>
             </div>
         </div>
         
