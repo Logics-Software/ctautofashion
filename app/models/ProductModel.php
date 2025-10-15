@@ -10,18 +10,43 @@ class ProductModel {
     /**
      * Get products with search, pagination, and sorting
      */
-    public function getProducts($search = '', $page = 1, $limit = 10, $sortBy = 'B.NamaBarang', $sortOrder = 'ASC') {
+    public function getProducts($search = '', $page = 1, $limit = 10, $sortBy = 'B.NamaBarang', $sortOrder = 'ASC', $filters = []) {
         try {
             $offset = ($page - 1) * $limit;
             
-            // Build search condition
-            $searchCondition = '';
+            // Build search and filter conditions
+            $conditions = [];
             $params = [];
             
+            // Text search condition
             if (!empty($search)) {
-                $searchCondition = 'AND (B.NamaBarang LIKE ? OR M.NamaMerek LIKE ? OR J.NamaJenis LIKE ? OR K.NamaKelompok LIKE ?)';
+                $conditions[] = '(B.NamaBarang LIKE ? OR M.NamaMerek LIKE ? OR J.NamaJenis LIKE ? OR K.NamaKelompok LIKE ?)';
                 $searchParam = '%' . $search . '%';
-                $params = [$searchParam, $searchParam, $searchParam, $searchParam];
+                $params = array_merge($params, [$searchParam, $searchParam, $searchParam, $searchParam]);
+            }
+            
+            // Filter by Kelompok (Group)
+            if (!empty($filters['kelompok'])) {
+                $conditions[] = 'B.KodeKelompok = ?';
+                $params[] = $filters['kelompok'];
+            }
+            
+            // Filter by Jenis (Type)
+            if (!empty($filters['jenis'])) {
+                $conditions[] = 'B.KodeJenis = ?';
+                $params[] = $filters['jenis'];
+            }
+            
+            // Filter by Merek (Brand)
+            if (!empty($filters['merek'])) {
+                $conditions[] = 'B.KodeMerek = ?';
+                $params[] = $filters['merek'];
+            }
+            
+            // Combine all conditions
+            $searchCondition = '';
+            if (!empty($conditions)) {
+                $searchCondition = 'AND ' . implode(' AND ', $conditions);
             }
             
             // Validate sort column to prevent SQL injection
@@ -71,15 +96,41 @@ class ProductModel {
     /**
      * Get total count of products for pagination
      */
-    public function getTotalProducts($search = '') {
+    public function getTotalProducts($search = '', $filters = []) {
         try {
-            $searchCondition = '';
+            // Build search and filter conditions
+            $conditions = [];
             $params = [];
             
+            // Text search condition
             if (!empty($search)) {
-                $searchCondition = 'AND (B.NamaBarang LIKE ? OR M.NamaMerek LIKE ? OR J.NamaJenis LIKE ? OR K.NamaKelompok LIKE ?)';
+                $conditions[] = '(B.NamaBarang LIKE ? OR M.NamaMerek LIKE ? OR J.NamaJenis LIKE ? OR K.NamaKelompok LIKE ?)';
                 $searchParam = '%' . $search . '%';
-                $params = [$searchParam, $searchParam, $searchParam, $searchParam];
+                $params = array_merge($params, [$searchParam, $searchParam, $searchParam, $searchParam]);
+            }
+            
+            // Filter by Kelompok (Group)
+            if (!empty($filters['kelompok'])) {
+                $conditions[] = 'B.KodeKelompok = ?';
+                $params[] = $filters['kelompok'];
+            }
+            
+            // Filter by Jenis (Type)
+            if (!empty($filters['jenis'])) {
+                $conditions[] = 'B.KodeJenis = ?';
+                $params[] = $filters['jenis'];
+            }
+            
+            // Filter by Merek (Brand)
+            if (!empty($filters['merek'])) {
+                $conditions[] = 'B.KodeMerek = ?';
+                $params[] = $filters['merek'];
+            }
+            
+            // Combine all conditions
+            $searchCondition = '';
+            if (!empty($conditions)) {
+                $searchCondition = 'AND ' . implode(' AND ', $conditions);
             }
             
             $sql = "SELECT COUNT(*) as total
@@ -140,6 +191,63 @@ class ProductModel {
             'B.HargaJual' => 'Harga Jual',
             'S.StokAkhir' => 'Stok Akhir'
         ];
+    }
+    
+    /**
+     * Get all groups (Kelompok) with status = 1
+     */
+    public function getGroups() {
+        try {
+            $sql = "SELECT KodeKelompok, NamaKelompok FROM TABELKELOMPOK WHERE Status = 1 ORDER BY NamaKelompok";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("ProductModel::getGroups error: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get types (Jenis) by group with status = 1
+     */
+    public function getTypesByGroup($kodeKelompok = null) {
+        try {
+            $sql = "SELECT KodeJenis, NamaJenis FROM TABELJENIS WHERE Status = 1";
+            $params = [];
+            
+            if (!empty($kodeKelompok)) {
+                $sql .= " AND KodeKelompok = ?";
+                $params[] = $kodeKelompok;
+            }
+            
+            $sql .= " ORDER BY NamaJenis";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("ProductModel::getTypesByGroup error: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get all brands (Merek) with status = 1
+     */
+    public function getBrands() {
+        try {
+            $sql = "SELECT KodeMerek, NamaMerek FROM TABELMEREK WHERE Status = 1 ORDER BY NamaMerek";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("ProductModel::getBrands error: " . $e->getMessage());
+            return [];
+        }
     }
 }
 ?>

@@ -33,7 +33,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
         <hr>
         
         <!-- Search and Filter Section -->
-        <div class="row mb-4">
+        <div class="row mb-2">
             <div class="col-md-8">
                 <form method="GET" action="" class="d-flex">
                     <div class="input-group">
@@ -46,7 +46,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                         <button class="btn btn-sm btn-outline-primary" type="submit">
                             <i class="fas fa-search"></i> Cari
                         </button>
-                        <?php if (!empty($search)): ?>
+                        <?php if (!empty($search) || !empty($filters['kelompok']) || !empty($filters['jenis']) || !empty($filters['merek'])): ?>
                             <a href="?" class="btn btn-outline-secondary">
                                 <i class="fas fa-times"></i> Reset
                             </a>
@@ -57,6 +57,9 @@ $title = 'Informasi Harga Jual dan Stok Barang';
             <div class="col-md-4">
                 <form method="GET" action="" class="d-flex">
                     <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="hidden" name="kelompok" value="<?php echo htmlspecialchars($filters['kelompok']); ?>">
+                    <input type="hidden" name="jenis" value="<?php echo htmlspecialchars($filters['jenis']); ?>">
+                    <input type="hidden" name="merek" value="<?php echo htmlspecialchars($filters['merek']); ?>">
                     <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy); ?>">
                     <input type="hidden" name="order" value="<?php echo htmlspecialchars($sortOrder); ?>">
                     <select name="limit" class="form-select" onchange="this.form.submit()">
@@ -70,6 +73,66 @@ $title = 'Informasi Harga Jual dan Stok Barang';
             </div>
         </div>
         
+        <!-- Filter Section -->
+        <div class="row mb-2">
+            <div class="col-12">
+                <form method="GET" action="" id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="kelompok" class="form-label">Kelompok</label>
+                            <select name="kelompok" id="kelompok" class="form-select" onchange="updateJenis(); this.form.submit();">
+                                <option value="">SEMUA</option>
+                                <?php foreach ($groups as $group): ?>
+                                    <option value="<?php echo htmlspecialchars($group['KodeKelompok']); ?>" 
+                                            <?php echo $filters['kelompok'] == $group['KodeKelompok'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($group['NamaKelompok']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="jenis" class="form-label">Jenis</label>
+                            <select name="jenis" id="jenis" class="form-select" onchange="this.form.submit();">
+                                <option value="">SEMUA</option>
+                                <?php foreach ($types as $type): ?>
+                                    <option value="<?php echo htmlspecialchars($type['KodeJenis']); ?>" 
+                                            <?php echo $filters['jenis'] == $type['KodeJenis'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($type['NamaJenis']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="merek" class="form-label">Merek</label>
+                            <select name="merek" id="merek" class="form-select" onchange="this.form.submit();">
+                                <option value="">SEMUA</option>
+                                <?php foreach ($brands as $brand): ?>
+                                    <option value="<?php echo htmlspecialchars($brand['KodeMerek']); ?>" 
+                                            <?php echo $filters['merek'] == $brand['KodeMerek'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($brand['NamaMerek']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetFilters();">
+                                    <i class="fas fa-filter-circle-xmark"></i> Reset Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden inputs to preserve search and other parameters -->
+                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="hidden" name="limit" value="<?php echo htmlspecialchars($limit); ?>">
+                    <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy); ?>">
+                    <input type="hidden" name="order" value="<?php echo htmlspecialchars($sortOrder); ?>">
+                </form>
+            </div>
+        </div>
+        
         <!-- Results Info -->
         <div class="row mb-0">
             <div class="col-12">
@@ -78,6 +141,43 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                     Menampilkan <?php echo count($products); ?> dari <?php echo number_format($totalProducts); ?> data
                     <?php if (!empty($search)): ?>
                         untuk pencarian "<strong><?php echo htmlspecialchars($search); ?></strong>"
+                    <?php endif; ?>
+                    
+                    <?php 
+                    $activeFilters = [];
+                    if (!empty($filters['kelompok'])) {
+                        $groupName = '';
+                        foreach ($groups as $group) {
+                            if ($group['KodeKelompok'] == $filters['kelompok']) {
+                                $groupName = $group['NamaKelompok'];
+                                break;
+                            }
+                        }
+                        $activeFilters[] = "Kelompok: <strong>" . htmlspecialchars($groupName) . "</strong>";
+                    }
+                    if (!empty($filters['jenis'])) {
+                        $typeName = '';
+                        foreach ($types as $type) {
+                            if ($type['KodeJenis'] == $filters['jenis']) {
+                                $typeName = $type['NamaJenis'];
+                                break;
+                            }
+                        }
+                        $activeFilters[] = "Jenis: <strong>" . htmlspecialchars($typeName) . "</strong>";
+                    }
+                    if (!empty($filters['merek'])) {
+                        $brandName = '';
+                        foreach ($brands as $brand) {
+                            if ($brand['KodeMerek'] == $filters['merek']) {
+                                $brandName = $brand['NamaMerek'];
+                                break;
+                            }
+                        }
+                        $activeFilters[] = "Merek: <strong>" . htmlspecialchars($brandName) . "</strong>";
+                    }
+                    
+                    if (!empty($activeFilters)): ?>
+                        <br><small>Filter aktif: <?php echo implode(', ', $activeFilters); ?></small>
                     <?php endif; ?>
                 </div>
             </div>
@@ -278,4 +378,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Filter functionality
+function updateJenis() {
+    const kelompokSelect = document.getElementById('kelompok');
+    const jenisSelect = document.getElementById('jenis');
+    const selectedKelompok = kelompokSelect.value;
+    
+    // Reset jenis selection when kelompok changes
+    jenisSelect.value = '';
+    
+    if (selectedKelompok) {
+        // Make AJAX request to get types for selected group
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '?ajax=get_types&kelompok=' + selectedKelompok, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    const types = JSON.parse(xhr.responseText);
+                    jenisSelect.innerHTML = '<option value="">SEMUA</option>';
+                    
+                    types.forEach(function(type) {
+                        const option = document.createElement('option');
+                        option.value = type.KodeJenis;
+                        option.textContent = type.NamaJenis;
+                        jenisSelect.appendChild(option);
+                    });
+                } catch (e) {
+                    console.error('Error parsing types response:', e);
+                }
+            }
+        };
+        xhr.send();
+    } else {
+        // Reset to all types
+        jenisSelect.innerHTML = '<option value="">SEMUA</option>';
+        <?php foreach ($types as $type): ?>
+        const option<?php echo $type['KodeJenis']; ?> = document.createElement('option');
+        option<?php echo $type['KodeJenis']; ?>.value = '<?php echo htmlspecialchars($type['KodeJenis']); ?>';
+        option<?php echo $type['KodeJenis']; ?>.textContent = '<?php echo htmlspecialchars($type['NamaJenis']); ?>';
+        jenisSelect.appendChild(option<?php echo $type['KodeJenis']; ?>);
+        <?php endforeach; ?>
+    }
+}
+
+function resetFilters() {
+    window.location.href = '?';
+}
 </script>

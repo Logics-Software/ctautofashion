@@ -10,9 +10,30 @@ class ProductController {
     }
     
     /**
+     * Handle AJAX requests for dynamic filter updates
+     */
+    public function handleAjax() {
+        if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_types') {
+            $kelompok = $_GET['kelompok'] ?? '';
+            
+            $productModel = new ProductModel();
+            $types = $productModel->getTypesByGroup($kelompok);
+            
+            header('Content-Type: application/json');
+            echo json_encode($types);
+            exit;
+        }
+    }
+    
+    /**
      * Display products page with search, pagination, and sorting
      */
     public function index() {
+        // Handle AJAX requests first
+        if (isset($_GET['ajax'])) {
+            $this->handleAjax();
+            return;
+        }
         $user_data = $_SESSION['user_data'] ?? [];
         $user_name = $user_data['UserName'] ?? $user_data['Name'] ?? $user_data['user_name'] ?? $_SESSION['user_id'];
         
@@ -23,12 +44,24 @@ class ProductController {
         $sortBy = $_GET['sort'] ?? 'B.NamaBarang';
         $sortOrder = $_GET['order'] ?? 'ASC';
         
+        // Get filter parameters
+        $filters = [
+            'kelompok' => $_GET['kelompok'] ?? '',
+            'jenis' => $_GET['jenis'] ?? '',
+            'merek' => $_GET['merek'] ?? ''
+        ];
+        
         // Initialize ProductModel
         $productModel = new ProductModel();
         
+        // Get filter data
+        $groups = $productModel->getGroups();
+        $types = $productModel->getTypesByGroup($filters['kelompok']);
+        $brands = $productModel->getBrands();
+        
         // Get products and total count
-        $products = $productModel->getProducts($search, $page, $limit, $sortBy, $sortOrder);
-        $totalProducts = $productModel->getTotalProducts($search);
+        $products = $productModel->getProducts($search, $page, $limit, $sortBy, $sortOrder, $filters);
+        $totalProducts = $productModel->getTotalProducts($search, $filters);
         $totalPages = ceil($totalProducts / $limit);
         
         
@@ -49,7 +82,11 @@ class ProductController {
             'totalProducts' => $totalProducts,
             'totalPages' => $totalPages,
             'sortColumns' => $sortColumns,
-            'paginationOptions' => [10, 20, 40, 50, 100]
+            'paginationOptions' => [10, 20, 40, 50, 100],
+            'filters' => $filters,
+            'groups' => $groups,
+            'types' => $types,
+            'brands' => $brands
         ];
         
         $this->renderView('product/index', $data);
