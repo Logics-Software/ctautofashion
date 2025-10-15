@@ -15,8 +15,8 @@
     <!-- Font Awesome CSS - Complete Version -->
     <link href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/css/fontawesome-complete.css" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/css/custom.css" rel="stylesheet">
+    <!-- Main CSS -->
+    <link href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/css/main.css" rel="stylesheet">
     
     <?php if (isset($additional_css)): ?>
         <?php foreach ($additional_css as $css): ?>
