@@ -1053,7 +1053,7 @@ body.not-logged-in .main-content {
   .btn,
   .nav-link,
   .form-control {
-    min-height: 48px;
+    min-height: 32px;
     touch-action: manipulation;
   }
 
