@@ -26,7 +26,12 @@ $title = 'Informasi Harga Jual dan Stok Barang';
     <div class="main-container fade-in">
         <div class="row">
             <div class="col-12">
-                <h4>Informasi Harga Jual dan Stok Barang</h4>
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0"><i class="fa-solid fa-money-bill-trend-up me-2"></i>Informasi Harga Jual dan Stok Barang</h4>
+                    <button type="button" class="btn" onclick="history.back()" title="Kembali" style="vertical-align: middle;">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -57,9 +62,9 @@ $title = 'Informasi Harga Jual dan Stok Barang';
             <div class="col-md-4">
                 <form method="GET" action="" class="d-flex">
                     <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                    <input type="hidden" name="kelompok" value="<?php echo htmlspecialchars($filters['kelompok']); ?>">
-                    <input type="hidden" name="jenis" value="<?php echo htmlspecialchars($filters['jenis']); ?>">
-                    <input type="hidden" name="merek" value="<?php echo htmlspecialchars($filters['merek']); ?>">
+                    <input type="hidden" name="kelompok_code" value="<?php echo htmlspecialchars($filters['kelompok']); ?>">
+                    <input type="hidden" name="jenis_code" value="<?php echo htmlspecialchars($filters['jenis']); ?>">
+                    <input type="hidden" name="merek_code" value="<?php echo htmlspecialchars($filters['merek']); ?>">
                     <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy); ?>">
                     <input type="hidden" name="order" value="<?php echo htmlspecialchars($sortOrder); ?>">
                     <select name="limit" class="form-select" onchange="this.form.submit()">
@@ -74,45 +79,117 @@ $title = 'Informasi Harga Jual dan Stok Barang';
         </div>
         
         <!-- Filter Section -->
-        <div class="row mb-2">
+        <div class="row mb-4">
             <div class="col-12">
                 <form method="GET" action="" id="filterForm">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="kelompok" class="form-label">Kelompok</label>
-                            <select name="kelompok" id="kelompok" class="form-select" onchange="updateJenis(); this.form.submit();">
-                                <option value="">SEMUA</option>
-                                <?php foreach ($groups as $group): ?>
-                                    <option value="<?php echo htmlspecialchars($group['KodeKelompok']); ?>" 
-                                            <?php echo $filters['kelompok'] == $group['KodeKelompok'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($group['NamaKelompok']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="custom-dropdown" id="kelompokDropdown">
+                                <div class="dropdown-trigger" onclick="toggleDropdown('kelompok')">
+                                    <input type="text" 
+                                           id="kelompok" 
+                                           class="form-select dropdown-input" 
+                                           placeholder="Pilih Kelompok..."
+                                           value="<?php echo !empty($filters['kelompok']) ? htmlspecialchars(array_values(array_filter($groups, fn($g) => $g['KodeKelompok'] == $filters['kelompok']))[0]['NamaKelompok'] ?? '') : ''; ?>"
+                                           readonly
+                                           autocomplete="off">
+                                    <span class="dropdown-caret" id="kelompokCaret">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </div>
+                                <div class="dropdown-content" id="kelompokContent">
+                                    <div class="dropdown-search">
+                                        <input type="text" 
+                                               id="kelompokSearch" 
+                                               placeholder="Cari kelompok..."
+                                               autocomplete="off">
+                                    </div>
+                                    <div class="dropdown-list" id="kelompokList">
+                                        <div class="dropdown-item" data-code="" onclick="selectOption('kelompok', '', 'SEMUA')">SEMUA</div>
+                                        <?php foreach ($groups as $group): ?>
+                                            <div class="dropdown-item" 
+                                                 data-code="<?php echo htmlspecialchars($group['KodeKelompok']); ?>"
+                                                 onclick="selectOption('kelompok', '<?php echo htmlspecialchars($group['KodeKelompok']); ?>', '<?php echo htmlspecialchars($group['NamaKelompok']); ?>')">
+                                                <?php echo htmlspecialchars($group['NamaKelompok']); ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="kelompok_code" id="kelompok_code" value="<?php echo htmlspecialchars($filters['kelompok']); ?>">
                         </div>
                         <div class="col-md-6">
                             <label for="jenis" class="form-label">Jenis</label>
-                            <select name="jenis" id="jenis" class="form-select" onchange="this.form.submit();">
-                                <option value="">SEMUA</option>
-                                <?php foreach ($types as $type): ?>
-                                    <option value="<?php echo htmlspecialchars($type['KodeJenis']); ?>" 
-                                            <?php echo $filters['jenis'] == $type['KodeJenis'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($type['NamaJenis']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="custom-dropdown" id="jenisDropdown">
+                                <div class="dropdown-trigger" onclick="toggleDropdown('jenis')">
+                                    <input type="text" 
+                                           id="jenis" 
+                                           class="form-select dropdown-input" 
+                                           placeholder="Pilih Jenis..."
+                                           value="<?php echo !empty($filters['jenis']) ? htmlspecialchars(array_values(array_filter($types, fn($t) => $t['KodeJenis'] == $filters['jenis']))[0]['NamaJenis'] ?? '') : ''; ?>"
+                                           readonly
+                                           autocomplete="off">
+                                    <span class="dropdown-caret" id="jenisCaret">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </div>
+                                <div class="dropdown-content" id="jenisContent">
+                                    <div class="dropdown-search">
+                                        <input type="text" 
+                                               id="jenisSearch" 
+                                               placeholder="Cari jenis..."
+                                               autocomplete="off">
+                                    </div>
+                                    <div class="dropdown-list" id="jenisList">
+                                        <div class="dropdown-item" data-code="" onclick="selectOption('jenis', '', 'SEMUA')">SEMUA</div>
+                                        <?php foreach ($types as $type): ?>
+                                            <div class="dropdown-item" 
+                                                 data-code="<?php echo htmlspecialchars($type['KodeJenis']); ?>"
+                                                 onclick="selectOption('jenis', '<?php echo htmlspecialchars($type['KodeJenis']); ?>', '<?php echo htmlspecialchars($type['NamaJenis']); ?>')">
+                                                <?php echo htmlspecialchars($type['NamaJenis']); ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="jenis_code" id="jenis_code" value="<?php echo htmlspecialchars($filters['jenis']); ?>">
                         </div>
                         <div class="col-md-6">
                             <label for="merek" class="form-label">Merek</label>
-                            <select name="merek" id="merek" class="form-select" onchange="this.form.submit();">
-                                <option value="">SEMUA</option>
-                                <?php foreach ($brands as $brand): ?>
-                                    <option value="<?php echo htmlspecialchars($brand['KodeMerek']); ?>" 
-                                            <?php echo $filters['merek'] == $brand['KodeMerek'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($brand['NamaMerek']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="custom-dropdown" id="merekDropdown">
+                                <div class="dropdown-trigger" onclick="toggleDropdown('merek')">
+                                    <input type="text" 
+                                           id="merek" 
+                                           class="form-select dropdown-input" 
+                                           placeholder="Pilih Merek..."
+                                           value="<?php echo !empty($filters['merek']) ? htmlspecialchars(array_values(array_filter($brands, fn($b) => $b['KodeMerek'] == $filters['merek']))[0]['NamaMerek'] ?? '') : ''; ?>"
+                                           readonly
+                                           autocomplete="off">
+                                    <span class="dropdown-caret" id="merekCaret">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </div>
+                                <div class="dropdown-content" id="merekContent">
+                                    <div class="dropdown-search">
+                                        <input type="text" 
+                                               id="merekSearch" 
+                                               placeholder="Cari merek..."
+                                               autocomplete="off">
+                                    </div>
+                                    <div class="dropdown-list" id="merekList">
+                                        <div class="dropdown-item" data-code="" onclick="selectOption('merek', '', 'SEMUA')">SEMUA</div>
+                                        <?php foreach ($brands as $brand): ?>
+                                            <div class="dropdown-item" 
+                                                 data-code="<?php echo htmlspecialchars($brand['KodeMerek']); ?>"
+                                                 onclick="selectOption('merek', '<?php echo htmlspecialchars($brand['KodeMerek']); ?>', '<?php echo htmlspecialchars($brand['NamaMerek']); ?>')">
+                                                <?php echo htmlspecialchars($brand['NamaMerek']); ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="merek_code" id="merek_code" value="<?php echo htmlspecialchars($filters['merek']); ?>">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">&nbsp;</label>
@@ -379,48 +456,164 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Filter functionality
-function updateJenis() {
-    const kelompokSelect = document.getElementById('kelompok');
-    const jenisSelect = document.getElementById('jenis');
-    const selectedKelompok = kelompokSelect.value;
+// Custom Dropdown Functionality
+let activeDropdown = null;
+
+function toggleDropdown(type) {
+    const dropdown = document.getElementById(type + 'Dropdown');
+    const content = document.getElementById(type + 'Content');
+    const caret = document.getElementById(type + 'Caret');
     
-    // Reset jenis selection when kelompok changes
-    jenisSelect.value = '';
+    // Close all other dropdowns
+    closeAllDropdowns();
     
-    if (selectedKelompok) {
-        // Make AJAX request to get types for selected group
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', '?ajax=get_types&kelompok=' + selectedKelompok, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                try {
-                    const types = JSON.parse(xhr.responseText);
-                    jenisSelect.innerHTML = '<option value="">SEMUA</option>';
-                    
-                    types.forEach(function(type) {
-                        const option = document.createElement('option');
-                        option.value = type.KodeJenis;
-                        option.textContent = type.NamaJenis;
-                        jenisSelect.appendChild(option);
-                    });
-                } catch (e) {
-                    console.error('Error parsing types response:', e);
-                }
+    if (activeDropdown !== type) {
+        content.classList.add('show');
+        caret.classList.add('open');
+        activeDropdown = type;
+        
+        // Focus on search input
+        setTimeout(() => {
+            const searchInput = document.getElementById(type + 'Search');
+            if (searchInput) {
+                searchInput.focus();
             }
-        };
-        xhr.send();
+        }, 100);
     } else {
-        // Reset to all types
-        jenisSelect.innerHTML = '<option value="">SEMUA</option>';
-        <?php foreach ($types as $type): ?>
-        const option<?php echo $type['KodeJenis']; ?> = document.createElement('option');
-        option<?php echo $type['KodeJenis']; ?>.value = '<?php echo htmlspecialchars($type['KodeJenis']); ?>';
-        option<?php echo $type['KodeJenis']; ?>.textContent = '<?php echo htmlspecialchars($type['NamaJenis']); ?>';
-        jenisSelect.appendChild(option<?php echo $type['KodeJenis']; ?>);
-        <?php endforeach; ?>
+        activeDropdown = null;
     }
 }
+
+function closeAllDropdowns() {
+    const dropdowns = ['kelompok', 'jenis', 'merek'];
+    dropdowns.forEach(type => {
+        const content = document.getElementById(type + 'Content');
+        const caret = document.getElementById(type + 'Caret');
+        if (content) content.classList.remove('show');
+        if (caret) caret.classList.remove('open');
+    });
+    activeDropdown = null;
+}
+
+function selectOption(type, code, name) {
+    const input = document.getElementById(type);
+    const codeInput = document.getElementById(type + '_code');
+    
+    input.value = name;
+    codeInput.value = code;
+    
+    // Close dropdown
+    closeAllDropdowns();
+    
+    // Handle kelompok change
+    if (type === 'kelompok') {
+        handleKelompokChange(code);
+        // Submit form
+        document.getElementById('filterForm').submit();
+    } else {
+        // Submit form for jenis and merek
+        document.getElementById('filterForm').submit();
+    }
+}
+
+function handleKelompokChange(kelompokCode) {
+    const jenisInput = document.getElementById('jenis');
+    const jenisCodeInput = document.getElementById('jenis_code');
+    
+    // Reset jenis selection when kelompok changes
+    jenisInput.value = '';
+    jenisCodeInput.value = '';
+    
+    // Update jenis list if kelompok is selected
+    if (kelompokCode) {
+        updateJenisList(kelompokCode);
+    } else {
+        resetJenisList();
+    }
+}
+
+function updateJenisList(kelompokCode) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '?ajax=get_types&kelompok=' + kelompokCode, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                const types = JSON.parse(xhr.responseText);
+                const jenisList = document.getElementById('jenisList');
+                
+                // Clear existing options except SEMUA
+                jenisList.innerHTML = '<div class="dropdown-item" data-code="" onclick="selectOption(\'jenis\', \'\', \'SEMUA\')">SEMUA</div>';
+                
+                types.forEach(function(type) {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.setAttribute('data-code', type.KodeJenis);
+                    div.onclick = function() { selectOption('jenis', type.KodeJenis, type.NamaJenis); };
+                    div.textContent = type.NamaJenis;
+                    jenisList.appendChild(div);
+                });
+            } catch (e) {
+                console.error('Error parsing types response:', e);
+            }
+        }
+    };
+    xhr.send();
+}
+
+function resetJenisList() {
+    const jenisList = document.getElementById('jenisList');
+    jenisList.innerHTML = '<div class="dropdown-item" data-code="" onclick="selectOption(\'jenis\', \'\', \'SEMUA\')">SEMUA</div>';
+    <?php foreach ($types as $type): ?>
+    const div<?php echo $type['KodeJenis']; ?> = document.createElement('div');
+    div<?php echo $type['KodeJenis']; ?>.className = 'dropdown-item';
+    div<?php echo $type['KodeJenis']; ?>.setAttribute('data-code', '<?php echo htmlspecialchars($type['KodeJenis']); ?>');
+    div<?php echo $type['KodeJenis']; ?>.onclick = function() { selectOption('jenis', '<?php echo htmlspecialchars($type['KodeJenis']); ?>', '<?php echo htmlspecialchars($type['NamaJenis']); ?>'); };
+    div<?php echo $type['KodeJenis']; ?>.textContent = '<?php echo htmlspecialchars($type['NamaJenis']); ?>';
+    jenisList.appendChild(div<?php echo $type['KodeJenis']; ?>);
+    <?php endforeach; ?>
+}
+
+// Search functionality
+function setupSearch(type) {
+    const searchInput = document.getElementById(type + 'Search');
+    const list = document.getElementById(type + 'List');
+    const items = list.querySelectorAll('.dropdown-item');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup search for all dropdowns
+    setupSearch('kelompok');
+    setupSearch('jenis');
+    setupSearch('merek');
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+            closeAllDropdowns();
+        }
+    });
+    
+    // Handle escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllDropdowns();
+        }
+    });
+});
 
 function resetFilters() {
     window.location.href = '?';

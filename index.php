@@ -118,6 +118,15 @@ $router->addRoute('POST', '/profile/delete-photo', 'ProfileController', 'deleteP
 // Product routes
 $router->addRoute('GET', '/products', 'ProductController', 'index');
 
+// Service routes
+$router->addRoute('GET', '/service', 'ServiceController', 'index');
+$router->addRoute('POST', '/service', 'ServiceController', 'selectCustomer');
+$router->addRoute('GET', '/service/clear', 'ServiceController', 'clearCustomer');
+
+// Vehicle routes
+$router->addRoute('GET', '/vehicle', 'VehicleController', 'index');
+$router->addRoute('POST', '/vehicle', 'VehicleController', 'selectVehicle');
+
 // Dispatch the request
 $router->dispatch();
 ?>

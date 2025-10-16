@@ -13,7 +13,7 @@ try {
     
     // Test connection
     if ($pdo) {
-        echo "<!-- Database connection successful -->";
+        // Connection successful - no output needed
     }
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());

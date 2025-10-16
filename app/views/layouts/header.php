@@ -100,18 +100,23 @@ if ($is_logged_in) {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link sidebar-link" href="#">
+                            <i class="fa-solid fa-briefcase me-2"></i>Informasi Work Order
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products">
                                 <i class="fa-solid fa-money-bill-trend-up me-2"></i>Informasi Stok & Harga
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="#">
-                            <i class="fa-solid fa-money-check-dollar me-2"></i>Informasi Tarif Jasa
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/service">
+                                <i class="fa-solid fa-wrench me-2"></i>Informasi Service Customer
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="#">
-                            <i class="fa-solid fa-caravan me-2"></i>Informasi Transaksi Customer
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/vehicle">
+                                <i class="fa-solid fa-car me-2"></i>Informasi Service Kendaraan
                             </a>
                         </li>
                         <li class="nav-item">

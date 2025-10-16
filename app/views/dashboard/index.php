@@ -125,9 +125,9 @@ $title = 'Dashboard';
                 <div class="card">
                     <div class="card-body card-hover-warning text-center">
                         <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
-                        <h6 class="card-title fw-bold">Informasi Harga dan Stok Barang</h6>
+                        <h6 class="card-title fw-bold">Informasi Daftar Harga dan Stok Barang</h6>
                         <p class="card-text text-muted small">Lihat informasi harga dan stok barang terbaru</p>
-                        <a href="/products" class="btn btn-outline-warning btn-sm">
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products" class="btn btn-outline-warning btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>
@@ -138,9 +138,9 @@ $title = 'Dashboard';
                 <div class="card">
                     <div class="card-body card-hover-primary text-center">
                         <i class="fas fa-wrench fa-3x text-primary mb-3"></i>
-                        <h6 class="card-title fw-bold">Informasi Tarif Jasa Bengkel</h6>
-                        <p class="card-text text-muted small">Lihat daftar tarif jasa bengkel terkini</p>
-                        <a href="#" class="btn btn-outline-primary btn-sm">
+                        <h6 class="card-title fw-bold">Informasi Transaksi Order Customer</h6>
+                        <p class="card-text text-muted small">Lihat informasi lengkap tentang service dan invoice yang pernah dilakukan berdasarkan customer</p>
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/service" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>
@@ -151,9 +151,9 @@ $title = 'Dashboard';
                 <div class="card">
                     <div class="card-body card-hover-success text-center">
                         <i class="fas fa-users fa-3x text-success mb-3"></i>
-                        <h6 class="card-title fw-bold">Informasi Transaksi Customer</h6>
-                        <p class="card-text text-muted small">Lihat riwayat transaksi customer</p>
-                        <a href="#" class="btn btn-outline-success btn-sm">
+                        <h6 class="card-title fw-bold">Informasi Transaksi Order Kendaraan</h6>
+                        <p class="card-text text-muted small">Lihat informasi lengkap tentang service dan invoice yang pernah dilakukan berdasarkan kendaraan</p>
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/vehicle" class="btn btn-outline-success btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>

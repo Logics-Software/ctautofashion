@@ -44,11 +44,11 @@ class ProductController {
         $sortBy = $_GET['sort'] ?? 'B.NamaBarang';
         $sortOrder = $_GET['order'] ?? 'ASC';
         
-        // Get filter parameters
+        // Get filter parameters (using code values from hidden inputs)
         $filters = [
-            'kelompok' => $_GET['kelompok'] ?? '',
-            'jenis' => $_GET['jenis'] ?? '',
-            'merek' => $_GET['merek'] ?? ''
+            'kelompok' => $_GET['kelompok_code'] ?? '',
+            'jenis' => $_GET['jenis_code'] ?? '',
+            'merek' => $_GET['merek_code'] ?? ''
         ];
         
         // Initialize ProductModel

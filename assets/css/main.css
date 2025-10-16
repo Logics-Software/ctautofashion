@@ -132,6 +132,126 @@ body {
 }
 
 /* ========================================
+   CUSTOM DROPDOWN STYLES
+   ======================================== */
+
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-input {
+  padding-right: 40px !important;
+  cursor: pointer;
+  background-image: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.dropdown-caret {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #6c757d;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-caret.open {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: none;
+  max-height: 250px;
+}
+
+.dropdown-content.show {
+  display: block;
+}
+
+.dropdown-search {
+  padding: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.dropdown-search input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #e9ecef;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.dropdown-search input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item.selected {
+  background-color: #667eea;
+  color: white;
+}
+
+/* Scrollbar styling untuk dropdown list */
+.dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ========================================
    3. FORM ELEMENTS ALL PAGES
    ======================================== */
 
@@ -1490,6 +1610,41 @@ body.not-logged-in .main-content {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+/* ========================================
+   MODAL CUSTOM STYLES
+   ======================================== */
+
+/* Customer Modal - Tablet Width */
+@media (min-width: 768px) and (max-width: 1024px) {
+  #customerModal .modal-dialog {
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+}
+
+/* Customer Modal - Large Tablet / Small Desktop */
+@media (min-width: 1025px) and (max-width: 1200px) {
+  #customerModal .modal-dialog {
+    max-width: 85% !important;
+    width: 85% !important;
+  }
+}
+
+/* Customer Modal - General Tablet Override */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .modal-dialog.modal-lg {
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+}
+
+/* Force modal width for all screen sizes if needed */
+@media (min-width: 768px) {
+  #customerModal .modal-dialog.modal-lg {
+    max-width: 90% !important;
+    width: 90% !important;
   }
 }
 
