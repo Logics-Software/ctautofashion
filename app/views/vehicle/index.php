@@ -28,7 +28,7 @@ $title = 'Informasi Kendaraan';
             <div class="col-12">
                 <div class="d-flex align-items-center justify-content-between">
                     <h4 class="mb-0"><i class="fa-solid fa-car me-2"></i>Informasi Kendaraan</h4>
-                    <button type="button" class="btn" onclick="history.back()" title="Kembali" style="vertical-align: middle;">
+                    <button type="button" class="btn" onclick="window.location.href='<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/dashboard'" title="Kembali" style="vertical-align: middle;">
                         <i class="fas fa-arrow-left"></i>
                     </button>
                 </div>
@@ -285,9 +285,7 @@ function selectVehicle(code, name, noPolisi, merek, customer) {
 
 // Clear vehicle selection
 function clearVehicle() {
-    if (confirm('Apakah Anda yakin ingin menghapus pilihan kendaraan?')) {
-        window.location.href = '?action=clear_vehicle';
-    }
+    window.location.href = '?action=clear_vehicle';
 }
 
 // Load vehicle transactions

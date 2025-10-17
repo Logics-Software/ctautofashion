@@ -100,8 +100,8 @@ if ($is_logged_in) {
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="#">
-                            <i class="fa-solid fa-briefcase me-2"></i>Informasi Work Order
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/workorder">
+                                <i class="fa-solid fa-clipboard-list me-2"></i>Informasi Work Order
                             </a>
                         </li>
                         <li class="nav-item">

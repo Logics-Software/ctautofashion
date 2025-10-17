@@ -127,6 +127,9 @@ $router->addRoute('GET', '/service/clear', 'ServiceController', 'clearCustomer')
 $router->addRoute('GET', '/vehicle', 'VehicleController', 'index');
 $router->addRoute('POST', '/vehicle', 'VehicleController', 'selectVehicle');
 
+// Work Order routes
+$router->addRoute('GET', '/workorder', 'WorkOrderController', 'index');
+
 // Dispatch the request
 $router->dispatch();
 ?>
