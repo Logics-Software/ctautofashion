@@ -346,6 +346,269 @@ class WorkOrderModel {
     }
     
     /**
+     * Get order statistics by status
+     */
+    public function getOrderStatistics() {
+        try {
+            $sql = "SELECT 
+                        StatusOrder,
+                        COUNT(NoOrder) as TotalOrder
+                    FROM HeaderOrder
+                    GROUP BY StatusOrder
+                    ORDER BY StatusOrder";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Initialize all statuses with 0
+            $statistics = [
+                '0' => ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'],
+                '1' => ['status' => 'Sedang diproses', 'count' => 0, 'color' => 'info'],
+                '2' => ['status' => 'Proses Selesai', 'count' => 0, 'color' => 'warning'],
+                '3' => ['status' => 'Faktur dibuat', 'count' => 0, 'color' => 'primary'],
+                '4' => ['status' => 'Telah dibayar', 'count' => 0, 'color' => 'success'],
+                '5' => ['status' => 'Dibatalkan', 'count' => 0, 'color' => 'danger']
+            ];
+            
+            // Fill in the actual counts
+            foreach ($results as $row) {
+                $status = (string)$row['StatusOrder'];
+                if (isset($statistics[$status])) {
+                    $statistics[$status]['count'] = (int)$row['TotalOrder'];
+                }
+            }
+            
+            // Calculate total
+            $total = array_sum(array_column($statistics, 'count'));
+            
+            return [
+                'statistics' => $statistics,
+                'total' => $total
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error getting order statistics: " . $e->getMessage());
+            
+            return [
+                'statistics' => [
+                    '0' => ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'],
+                    '1' => ['status' => 'Sedang diproses', 'count' => 0, 'color' => 'info'],
+                    '2' => ['status' => 'Proses Selesai', 'count' => 0, 'color' => 'warning'],
+                    '3' => ['status' => 'Faktur dibuat', 'count' => 0, 'color' => 'primary'],
+                    '4' => ['status' => 'Telah dibayar', 'count' => 0, 'color' => 'success'],
+                    '5' => ['status' => 'Dibatalkan', 'count' => 0, 'color' => 'danger']
+                ],
+                'total' => 0
+            ];
+        }
+    }
+    
+    /**
+     * Get monthly revenue statistics for the last 12 months
+     */
+    public function getMonthlyRevenue() {
+        try {
+            // Query untuk total seluruh penjualan per bulan
+            $sqlTotal = "SELECT 
+                            FORMAT(J.TanggalPenjualan, 'yyyy-MM') as Bulan,
+                            SUM(J.TotalPenjualan) as TotalPenjualan
+                        FROM HeaderPenjualan J
+                        WHERE J.TanggalPenjualan >= DATEADD(MONTH, -12, GETDATE())
+                        GROUP BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')
+                        ORDER BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')";
+            
+            $stmtTotal = $this->pdo->prepare($sqlTotal);
+            $stmtTotal->execute();
+            $totalResults = $stmtTotal->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Query untuk penjualan customer perorangan (JenisCustomer = 0)
+            $sqlPerorangan = "SELECT 
+                                FORMAT(J.TanggalPenjualan, 'yyyy-MM') as Bulan,
+                                SUM(J.TotalPenjualan) as TotalPenjualan
+                            FROM HeaderPenjualan J
+                            INNER JOIN FileCustomer C ON J.KodeCustomer = C.KodeCustomer
+                            INNER JOIN FileJenisCustomer JC ON C.KodeCustomer = JC.KodeCustomer
+                            WHERE J.TanggalPenjualan >= DATEADD(MONTH, -12, GETDATE())
+                              AND JC.JenisCustomer = 0
+                            GROUP BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')
+                            ORDER BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')";
+            
+            $stmtPerorangan = $this->pdo->prepare($sqlPerorangan);
+            $stmtPerorangan->execute();
+            $peroranganResults = $stmtPerorangan->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Query untuk penjualan customer perusahaan (JenisCustomer = 1)
+            $sqlPerusahaan = "SELECT 
+                                FORMAT(J.TanggalPenjualan, 'yyyy-MM') as Bulan,
+                                SUM(J.TotalPenjualan) as TotalPenjualan
+                            FROM HeaderPenjualan J
+                            INNER JOIN FileCustomer C ON J.KodeCustomer = C.KodeCustomer
+                            INNER JOIN FileJenisCustomer JC ON C.KodeCustomer = JC.KodeCustomer
+                            WHERE J.TanggalPenjualan >= DATEADD(MONTH, -12, GETDATE())
+                              AND JC.JenisCustomer = 1
+                            GROUP BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')
+                            ORDER BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')";
+            
+            $stmtPerusahaan = $this->pdo->prepare($sqlPerusahaan);
+            $stmtPerusahaan->execute();
+            $perusahaanResults = $stmtPerusahaan->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Prepare data for chart - ensure we have 12 months
+            $months = [];
+            $totalRevenue = [];
+            $peroranganRevenue = [];
+            $perusahaanRevenue = [];
+            
+            // Generate last 12 months
+            for ($i = 11; $i >= 0; $i--) {
+                $date = date('Y-m', strtotime("-$i months"));
+                $months[] = date('M Y', strtotime($date . '-01'));
+                
+                // Find matching total revenue
+                $foundTotal = false;
+                foreach ($totalResults as $row) {
+                    if ($row['Bulan'] === $date) {
+                        $totalRevenue[] = (float)$row['TotalPenjualan'];
+                        $foundTotal = true;
+                        break;
+                    }
+                }
+                if (!$foundTotal) {
+                    $totalRevenue[] = 0;
+                }
+                
+                // Find matching perorangan revenue
+                $foundPerorangan = false;
+                foreach ($peroranganResults as $row) {
+                    if ($row['Bulan'] === $date) {
+                        $peroranganRevenue[] = (float)$row['TotalPenjualan'];
+                        $foundPerorangan = true;
+                        break;
+                    }
+                }
+                if (!$foundPerorangan) {
+                    $peroranganRevenue[] = 0;
+                }
+                
+                // Find matching perusahaan revenue
+                $foundPerusahaan = false;
+                foreach ($perusahaanResults as $row) {
+                    if ($row['Bulan'] === $date) {
+                        $perusahaanRevenue[] = (float)$row['TotalPenjualan'];
+                        $foundPerusahaan = true;
+                        break;
+                    }
+                }
+                if (!$foundPerusahaan) {
+                    $perusahaanRevenue[] = 0;
+                }
+            }
+            
+            return [
+                'months' => $months,
+                'totalRevenue' => $totalRevenue,
+                'peroranganRevenue' => $peroranganRevenue,
+                'perusahaanRevenue' => $perusahaanRevenue
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error getting monthly revenue: " . $e->getMessage());
+            
+            // Return empty data structure
+            $months = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $months[] = date('M Y', strtotime("-$i months"));
+            }
+            
+            return [
+                'months' => $months,
+                'totalRevenue' => array_fill(0, 12, 0),
+                'peroranganRevenue' => array_fill(0, 12, 0),
+                'perusahaanRevenue' => array_fill(0, 12, 0)
+            ];
+        }
+    }
+    
+    /**
+     * Get work order statistics by month for the last 12 months
+     */
+    public function getMonthlyStatistics() {
+        try {
+            // Get data for the last 12 months
+            $sql = "SELECT 
+                        FORMAT(H.TanggalOrder, 'yyyy-MM') as Bulan,
+                        COUNT(DISTINCT H.NoOrder) as TotalOrder,
+                        SUM(CASE WHEN H.StatusOrder = '4' THEN 1 ELSE 0 END) as OrderSelesai,
+                        SUM(CASE WHEN H.StatusOrder = '5' THEN 1 ELSE 0 END) as OrderBatal
+                    FROM HeaderOrder H
+                    WHERE H.TanggalOrder >= DATEADD(MONTH, -12, GETDATE())
+                    GROUP BY FORMAT(H.TanggalOrder, 'yyyy-MM')
+                    ORDER BY FORMAT(H.TanggalOrder, 'yyyy-MM')";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Prepare data for chart - ensure we have 12 months
+            $months = [];
+            $totalOrders = [];
+            $completedOrders = [];
+            $canceledOrders = [];
+            
+            // Generate last 12 months
+            for ($i = 11; $i >= 0; $i--) {
+                $date = date('Y-m', strtotime("-$i months"));
+                $months[] = date('M Y', strtotime($date . '-01'));
+                
+                // Find matching data
+                $found = false;
+                foreach ($results as $row) {
+                    if ($row['Bulan'] === $date) {
+                        $totalOrders[] = (int)$row['TotalOrder'];
+                        $completedOrders[] = (int)$row['OrderSelesai'];
+                        $canceledOrders[] = (int)$row['OrderBatal'];
+                        $found = true;
+                        break;
+                    }
+                }
+                
+                // If no data for this month, set to 0
+                if (!$found) {
+                    $totalOrders[] = 0;
+                    $completedOrders[] = 0;
+                    $canceledOrders[] = 0;
+                }
+            }
+            
+            return [
+                'months' => $months,
+                'totalOrders' => $totalOrders,
+                'completedOrders' => $completedOrders,
+                'canceledOrders' => $canceledOrders
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error getting monthly statistics: " . $e->getMessage());
+            
+            // Return empty data structure
+            $months = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $months[] = date('M Y', strtotime("-$i months"));
+            }
+            
+            return [
+                'months' => $months,
+                'totalOrders' => array_fill(0, 12, 0),
+                'completedOrders' => array_fill(0, 12, 0),
+                'canceledOrders' => array_fill(0, 12, 0)
+            ];
+        }
+    }
+    
+    /**
      * Get status text from status code
      */
     private function getStatusText($status) {

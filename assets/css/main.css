@@ -40,12 +40,13 @@
 /* ========================================
    1. BASE STYLES & RESET
    ======================================== */
-
-body {
+:root {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   scroll-behavior: smooth;
+  font-size: 1rem; /* Standard web default */
+  line-height: 1.4; /* Normal reading comfort */
 }
 
 /* ========================================
@@ -469,7 +470,7 @@ body {
 }
 
 .sidebar-nav .nav-item {
-  margin-bottom: 4px;
+  margin-bottom: 0px;
 }
 
 .sidebar-link {
@@ -967,6 +968,15 @@ body.not-logged-in .main-content {
 }
 
 /* ========================================
+   17. TABLE HEAD
+   ======================================== */
+.table thead th {
+  background-color: #717578;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ========================================
    16. RESPONSIVE DESIGN
    ======================================== */
 
@@ -1097,8 +1107,8 @@ body.not-logged-in .main-content {
   }
 }
 
-/* Tablet (769px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* Tablet (768px - 1024px) - Consolidated */
+@media (min-width: 768px) and (max-width: 1024px) {
   .login-card {
     max-width: 500px;
     padding: 3rem;
@@ -1289,6 +1299,10 @@ body.not-logged-in .main-content {
     max-height: 100px;
     max-width: 300px;
   }
+
+  .table {
+    font-size: 0.825rem;
+  }
 }
 
 /* Large Tablet / Small Desktop (1025px - 1200px) */
@@ -1387,46 +1401,6 @@ body.not-logged-in .main-content {
 }
 
 /* ========================================
-   MODAL CUSTOM STYLES
-   ======================================== */
-
-/* Customer Modal - Tablet Width */
-@media (min-width: 768px) and (max-width: 1024px) {
-  #customerModal .modal-dialog {
-    max-width: 90% !important;
-    width: 90% !important;
-  }
-}
-
-/* Customer Modal - Large Tablet / Small Desktop */
-@media (min-width: 1025px) and (max-width: 1200px) {
-  #customerModal .modal-dialog {
-    max-width: 85% !important;
-    width: 85% !important;
-  }
-}
-
-/* Customer Modal - General Tablet Override */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .modal-dialog.modal-lg {
-    max-width: 90% !important;
-    width: 90% !important;
-  }
-}
-
-/* Force modal width for all screen sizes if needed */
-@media (min-width: 768px) {
-  #customerModal .modal-dialog.modal-lg {
-    max-width: 90% !important;
-    width: 90% !important;
-  }
-}
-
-/* ========================================
-   END OF TABLE STYLES
-   ======================================== */
-
-/* ========================================
    Placeholder Styling
    ======================================== */
 
@@ -1516,15 +1490,6 @@ body.not-logged-in .main-content {
   transition: all 0.2s ease;
 }
 
-/* Modal width for Tablet - 90% of screen width */
-@media (min-width: 768px) and (max-width: 1024px) {
-  #detailModal .modal-dialog {
-    max-width: 90% !important;
-    width: 90% !important;
-    margin: 1.75rem auto;
-  }
-}
-
 /* ========================================
    SERVICE & VEHICLE MODAL STYLES
    ======================================== */
@@ -1533,4 +1498,51 @@ body.not-logged-in .main-content {
 .modal-lg-custom {
   max-width: 90%;
   width: 90%;
+}
+
+/* ========================================
+   CONSOLIDATED RESPONSIVE STYLES - Tablet (768px - 1024px)
+   ======================================== */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Customer Modal */
+  #customerModal .modal-dialog {
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+
+  /* General Modal Large */
+  .modal-dialog.modal-lg {
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+
+  /* Detail Modal */
+  #detailModal .modal-dialog {
+    max-width: 90% !important;
+    width: 90% !important;
+    margin: 1.75rem auto;
+  }
+}
+
+/* Force modal width for all tablets and up */
+@media (min-width: 768px) {
+  #customerModal .modal-dialog.modal-lg {
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.8rem;
+  }
+}
+
+/* Large Tablet / Small Desktop (1025px - 1200px) */
+@media (min-width: 1025px) and (max-width: 1200px) {
+  #customerModal .modal-dialog {
+    max-width: 85% !important;
+    width: 85% !important;
+  }
 }

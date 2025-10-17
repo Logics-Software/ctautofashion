@@ -264,7 +264,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
         <div class="row">
             <div class="col-12">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover main-table">
+                    <table class="table table-striped table-bordered table-hover main-table">
                         <thead class="table-dark">
                             <tr>
                                 <th class="sortable" data-sort="B.NamaBarang">

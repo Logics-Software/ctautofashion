@@ -299,7 +299,7 @@ function loadCustomerTransactions() {
                 if (data.length > 0) {
                     let html = `
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover main-table">
+                            <table class="table table-striped table-bordered table-hover main-table">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>No.WO</th>
@@ -423,7 +423,7 @@ function loadWorkOrderDetails(noOrder, customerCode) {
                                 Transaksi Service
                             </h6>
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover main-table">
+                                <table class="table table-striped table-bordered table-hover main-table">
                                     <thead class="table-dark">
                                         <tr>
                                             <th>Nama Jasa</th>
@@ -467,7 +467,7 @@ function loadWorkOrderDetails(noOrder, customerCode) {
                                 Transaksi Barang
                             </h6>
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover main-table">
+                                <table class="table table-striped table-bordered table-hover main-table">
                                     <thead class="table-dark">
                                         <tr>
                                             <th>Nama Barang</th>

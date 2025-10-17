@@ -272,13 +272,12 @@ $title = 'Informasi Transaksi Work Order';
         <div class="row">
             <div class="col-12">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover main-table">
+                    <table class="table table-bordered table-striped table-hover main-table">
                         <thead class="table-dark">
                             <tr>
                                 <th>No Order</th>
                                 <th>Tanggal</th>
                                 <th>Customer</th>
-                                <th>Alamat</th>
                                 <th>No Telepon</th>
                                 <th>No Polisi</th>
                                 <th>Kendaraan</th>
@@ -308,7 +307,6 @@ $title = 'Informasi Transaksi Work Order';
                                             }
                                         ?></td>
                                         <td><?php echo htmlspecialchars($workOrder['NamaCustomer'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($workOrder['AlamatCustomer'] ?? 'N/A'); ?></td>
                                         <td><?php echo htmlspecialchars($workOrder['NoTelepon'] ?? 'N/A'); ?></td>
                                         <td>
                                             <span class="badge bg-primary"><?php echo htmlspecialchars($workOrder['NoPolisi'] ?? 'N/A'); ?></span>
@@ -843,7 +841,7 @@ function showWorkOrderDetail(noOrder) {
                     row.innerHTML = `
                         <td>${escapeHtml(service.NamaJasa || '-')}</td>
                         <td>${escapeHtml(service.Mekanik || '-')}</td>
-                        <td class="text-center"><span class="badge bg-info">${parseInt(service.Qty) || 0}</span></td>
+                        <td class="text-center"><span class="badge bg-primary">${parseInt(service.Qty) || 0}</span></td>
                         <td class="text-end">${formatNumber(service.Tarif || 0)}</td>
                         <td class="text-end"><strong>${formatNumber(service.Total || 0)}</strong></td>
                     `;

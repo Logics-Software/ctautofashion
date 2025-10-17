@@ -1,5 +1,8 @@
 <?php
+require_once BASE_PATH . '/app/models/WorkOrderModel.php';
+
 class DashboardController {
+    private $workOrderModel;
     
     public function __construct() {
         // Check if user is logged in
@@ -7,6 +10,8 @@ class DashboardController {
             $this->redirect('/login');
             exit;
         }
+        
+        $this->workOrderModel = new WorkOrderModel();
     }
     
     /**
@@ -16,10 +21,22 @@ class DashboardController {
         $user_data = $_SESSION['user_data'] ?? [];
         $user_name = $user_data['UserName'] ?? $user_data['Name'] ?? $user_data['user_name'] ?? $_SESSION['user_id'];
         
+        // Get monthly statistics for chart
+        $chartData = $this->workOrderModel->getMonthlyStatistics();
+        
+        // Get monthly revenue for chart
+        $revenueData = $this->workOrderModel->getMonthlyRevenue();
+        
+        // Get order statistics by status
+        $orderStats = $this->workOrderModel->getOrderStatistics();
+        
         $data = [
             'user_id' => $_SESSION['user_id'],
             'user_name' => $user_name,
-            'user_data' => $user_data
+            'user_data' => $user_data,
+            'chartData' => $chartData,
+            'revenueData' => $revenueData,
+            'orderStats' => $orderStats
         ];
         
         $this->renderView('dashboard/index', $data);

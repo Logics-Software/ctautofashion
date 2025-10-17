@@ -108,12 +108,12 @@ if ($is_logged_in) {
                             </a>
                         </li>
                         <li class="nav-item">
-                            <hr class="my-3">
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/workorder">
+                                <i class="fa-solid fa-clipboard-list me-2"></i>Data Work Order
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/workorder">
-                                <i class="fa-solid fa-clipboard-list me-2"></i>Informasi Work Order
-                            </a>
+                            <hr class="my-3">
                         </li>
                         <li class="nav-item">
                             <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products">
