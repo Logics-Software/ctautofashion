@@ -44,7 +44,8 @@ class AuthController {
             // Login successful
             $_SESSION['user_id'] = $user['UserID'];
             $_SESSION['user_data'] = $user;
-            $_SESSION['tipe_user'] = $user['TipeUser'] ?? null; // Store TipeUser in session
+            // Default TipeUser to 0 (Operator) if not set
+            $_SESSION['tipe_user'] = $user['TipeUser'] ?? 0; // Store TipeUser in session, default 0
             $_SESSION['success'] = 'Login berhasil! Selamat datang.';
             
             $this->redirect('/dashboard');

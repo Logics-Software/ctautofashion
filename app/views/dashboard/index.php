@@ -2,8 +2,6 @@
 $title = 'Dashboard';
 ?>
 
-<div class="container">
-    
     <!-- Success Message -->
     <?php if (isset($_SESSION['success'])): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -61,6 +59,11 @@ $title = 'Dashboard';
             </div>
         </div>
 
+        <?php 
+        // Only show charts if TipeUser >= 2 (excluding 0 and 1)
+        $showCharts = !isset($tipe_user) || ((int)$tipe_user >= 2);
+        if ($showCharts): 
+        ?>
         <!-- Chart Section - Work Order Statistics -->
         <div class="row mb-4">
             <div class="col-12">
@@ -71,16 +74,16 @@ $title = 'Dashboard';
                     <div class="card-body">
                         <canvas id="workOrderChart" style="width: 100%; height: 400px;"></canvas>
                     </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
         <!-- Chart Section - Revenue Statistics -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistik Penjualan (Rupiah) - 12 Bulan Terakhir</h5>
+                        <h5 class="mb-0"><i class="fa-solid fa-chart-simple me-2"></i>Statistik Penjualan (Rupiah) - 12 Bulan Terakhir</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="revenueChart" style="width: 100%; height: 400px;"></canvas>
@@ -88,15 +91,43 @@ $title = 'Dashboard';
                 </div>
             </div>
         </div>
-
+        <?php endif; ?>
+            
         <!-- Order Statistics Card -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Informasi Total Data Work Order</h5>
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clipboard-list me-2"></i>Informasi Work Order
+                                </h5>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <select id="periodFilter" class="form-select form-select-sm">
+                                            <option value="today" selected>Hari Ini</option>
+                                            <option value="yesterday">Kemarin</option>
+                                            <option value="this_week">Minggu Ini</option>
+                                            <option value="this_month">Bulan Ini</option>
+                                            <option value="this_year">Tahun Ini</option>
+                                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8" id="customDateContainer" style="display: none;">
+                                        <div class="input-group input-group-sm">
+                                            <input type="date" id="startDate" class="form-control form-control-sm">
+                                            <span class="input-group-text">-</span>
+                                            <input type="date" id="endDate" class="form-control form-control-sm">
+                                        </div>
                     </div>
-                    <div class="card-body">
+                </div>
+            </div>
+                        </div>
+                    </div>
+                    <div class="card-body" id="orderStatsContainer">
                         <div class="row">
                             <!-- Total All Orders -->
                             <div class="col-md-12 mb-3">
@@ -104,14 +135,14 @@ $title = 'Dashboard';
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <h6 class="mb-1 text-white"><i class="fas fa-clipboard-check me-2"></i>Total Semua Work Order</h6>
-                                        </div>
+                </div>
                                         <div>
                                             <h3 class="mb-0 text-white fw-bold"><?php echo $orderStats['total'] ?? 0; ?> WO</h3>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
+            </div>
+                    </div>
+                </div>
+            </div>
+
                             <!-- Status Details -->
                             <?php if (isset($orderStats['statistics'])): ?>
                                 <?php foreach ($orderStats['statistics'] as $statusCode => $data): ?>
@@ -123,14 +154,14 @@ $title = 'Dashboard';
                                                         <h6 class="card-title text-<?php echo $data['color']; ?> mb-2">
                                                             <i class="fas fa-circle me-2"></i><?php echo $data['status']; ?>
                                                         </h6>
-                                                        <p class="card-text text-muted mb-0 small">Status Order: <?php echo $statusCode; ?></p>
-                                                    </div>
+                                                        <p class="card-text text-muted mb-0 small"></p>
+                    </div>
                                                     <div class="text-end">
                                                         <h2 class="mb-0 text-<?php echo $data['color']; ?> fw-bold"><?php echo $data['count']; ?></h2>
                                                         <small class="text-muted">Work Order</small>
-                                                    </div>
-                                                </div>
-                                                
+                </div>
+            </div>
+
                                                 <!-- Progress Bar -->
                                                 <?php 
                                                     $percentage = $orderStats['total'] > 0 ? ($data['count'] / $orderStats['total']) * 100 : 0;
@@ -145,9 +176,9 @@ $title = 'Dashboard';
                                                     </div>
                                                 </div>
                                                 <small class="text-muted mt-1 d-block text-end"><?php echo number_format($percentage, 1); ?>% dari total</small>
-                                            </div>
-                                        </div>
-                                    </div>
+                    </div>
+                </div>
+            </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
@@ -159,7 +190,8 @@ $title = 'Dashboard';
         <!-- Quick Actions -->
         <div class="row mt-4">
             <div class="col-12">
-                <h5><i class="fas fa-bolt me-2 text-warning"></i>Informasi Harga, Stok, dan Transaksi</h5>
+                <!-- <i class="fa-solid fa-money-check-dollar"></i> -->
+                <h5><i class="fas fa-bolt me-2"></i>Informasi Harga, Stok, dan Transaksi</h5>
             </div>
         </div>
         
@@ -167,10 +199,10 @@ $title = 'Dashboard';
             <div class="col-md-4 mb-3">
                 <div class="card">
                     <div class="card-body card-hover-warning text-center">
-                        <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
-                        <h6 class="card-title fw-bold">Informasi Harga dan Stok Barang</h6>
+                        <i class="fa-solid fa-money-check-dollar fa-3x text-warning mb-3"></i>
+                        <h6 class="">Informasi Harga dan Stok Barang</h6>
                         <p class="card-text text-muted small">Lihat informasi lengkap tentang harga jual dan stok barang terbaru<br/><br/></p>
-                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products" class="btn btn-outline-warning btn-sm">
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products" class="btn btn-warning btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>
@@ -183,7 +215,7 @@ $title = 'Dashboard';
                         <i class="fas fa-wrench fa-3x text-primary mb-3"></i>
                         <h6 class="card-title fw-bold">Informasi Transaksi Order Customer</h6>
                         <p class="card-text text-muted small">Lihat informasi lengkap tentang service dan invoice yang pernah dilakukan berdasarkan customer</p>
-                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/service" class="btn btn-outline-primary btn-sm">
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/service" class="btn btn-primary btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>
@@ -193,10 +225,10 @@ $title = 'Dashboard';
             <div class="col-md-4 mb-3">
                 <div class="card">
                     <div class="card-body card-hover-success text-center">
-                        <i class="fas fa-users fa-3x text-success mb-3"></i>
+                        <i class="fa-solid fa-car-side fa-3x text-success mb-3"></i>
                         <h6 class="card-title fw-bold">Informasi Transaksi Order Kendaraan</h6>
                         <p class="card-text text-muted small">Lihat informasi lengkap tentang service dan invoice yang pernah dilakukan berdasarkan kendaraan</p>
-                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/vehicle" class="btn btn-outline-success btn-sm">
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/vehicle" class="btn btn-success btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>
                     </div>
@@ -216,16 +248,190 @@ $title = 'Dashboard';
             </div>
         </div>
     </div>
-</div>
+
 
 <script>
-// Chart.js - Work Order Statistics
+// Main Dashboard Script
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== Order Statistics Filter =====
+    const periodFilter = document.getElementById('periodFilter');
+    const customDateContainer = document.getElementById('customDateContainer');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const orderStatsContainer = document.getElementById('orderStatsContainer');
+    
+    // Function to render order statistics
+    function renderOrderStats(data) {
+        if (!data) {
+            orderStatsContainer.innerHTML = '<div class="alert alert-danger">Error: Data tidak valid</div>';
+            return;
+        }
+        
+        if (!data.statistics) {
+            orderStatsContainer.innerHTML = '<div class="alert alert-warning">Tidak ada data statistik tersedia</div>';
+            return;
+        }
+        
+        let html = '<div class="row">';
+        
+        // Total All Orders - Always render this first
+        const totalValue = data.total || 0;
+        
+        html += `
+            <div class="col-md-12 mb-3">
+                <div class="alert alert-info mb-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-white"><i class="fas fa-clipboard-check me-2"></i>Total Semua Work Order</h6>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-white fw-bold">${totalValue} WO</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Status Details
+        const statistics = data.statistics;
+        
+        // Handle both object and array format
+        if (statistics) {
+            // Convert to array of entries for consistent processing
+            const entries = Array.isArray(statistics) 
+                ? statistics.map((item, index) => [index.toString(), item])
+                : Object.entries(statistics);
+            
+            for (const [statusCode, statusData] of entries) {
+                if (!statusData || typeof statusData !== 'object') {
+                    continue;
+                }
+                
+                const percentage = data.total > 0 ? (statusData.count / data.total * 100).toFixed(1) : 0;
+                
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-${statusData.color} h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title text-${statusData.color} mb-2">
+                                            <i class="fas fa-circle me-2"></i>${statusData.status}
+                                        </h6>
+                                        <p class="card-text text-muted mb-0 small">Status Order: ${statusCode}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <h2 class="mb-0 text-${statusData.color} fw-bold">${statusData.count}</h2>
+                                        <small class="text-muted">Work Order</small>
+    </div>
+</div>
+                                
+                                <!-- Progress Bar -->
+                                <div class="progress mt-3" style="height: 8px;">
+                                    <div class="progress-bar bg-${statusData.color}" 
+                                         role="progressbar" 
+                                         style="width: ${percentage}%;" 
+                                         aria-valuenow="${percentage}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-1 d-block text-end">${percentage}% dari total</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        html += '</div>';
+        orderStatsContainer.innerHTML = html;
+    }
+    
+    // Function to load order statistics
+    function loadOrderStats() {
+        if (!periodFilter || !orderStatsContainer) return;
+        
+        const period = periodFilter.value;
+        const startDate = startDateInput ? startDateInput.value : '';
+        const endDate = endDateInput ? endDateInput.value : '';
+        
+        // Validate custom dates
+        if (period === 'custom' && (!startDate || !endDate)) {
+            alert('Silakan pilih tanggal mulai dan tanggal akhir');
+            return;
+        }
+        
+        // Show loading
+        orderStatsContainer.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Memuat data...</p></div>';
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('period', period);
+        if (period === 'custom') {
+            formData.append('start_date', startDate);
+            formData.append('end_date', endDate);
+        }
+        
+        // AJAX request
+        fetch('<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/dashboard/getOrderStats', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderOrderStats(data);
+        })
+        .catch(error => {
+            console.error('Error loading order stats:', error);
+            orderStatsContainer.innerHTML = '<div class="alert alert-danger">Gagal memuat data. Silakan coba lagi.</div>';
+        });
+    }
+    
+    // Event listeners for filter
+    if (periodFilter) {
+        periodFilter.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                if (customDateContainer) customDateContainer.style.display = 'block';
+            } else {
+                if (customDateContainer) customDateContainer.style.display = 'none';
+                loadOrderStats();
+            }
+        });
+    }
+    
+    if (startDateInput) {
+        startDateInput.addEventListener('change', function() {
+            if (periodFilter.value === 'custom' && startDateInput.value && endDateInput.value) {
+                loadOrderStats();
+            }
+        });
+    }
+    
+    if (endDateInput) {
+        endDateInput.addEventListener('change', function() {
+            if (periodFilter.value === 'custom' && startDateInput.value && endDateInput.value) {
+                loadOrderStats();
+            }
+        });
+    }
+    
+    // ===== Chart.js - Work Order Statistics =====
     const ctx = document.getElementById('workOrderChart');
     
     if (ctx) {
         // Get data from PHP
         const chartData = <?php echo json_encode($chartData ?? []); ?>;
+        
+        // Check if chartData is empty or null
+        if (!chartData || Object.keys(chartData).length === 0) {
+            return;
+        }
         
         // Create chart
         new Chart(ctx, {
@@ -368,12 +574,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Revenue Chart
+    // ===== Revenue Chart =====
     const ctxRevenue = document.getElementById('revenueChart');
     
     if (ctxRevenue) {
         // Get data from PHP
         const revenueData = <?php echo json_encode($revenueData ?? []); ?>;
+        
+        // Check if revenueData is empty or null
+        if (!revenueData || Object.keys(revenueData).length === 0) {
+            return;
+        }
         
         // Function to format currency
         const formatRupiah = (amount) => {

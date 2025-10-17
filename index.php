@@ -105,6 +105,7 @@ $router = new Router();
 $router->addRoute('GET', '/login', 'AuthController', 'login');
 $router->addRoute('POST', '/login', 'AuthController', 'processLogin');
 $router->addRoute('GET', '/dashboard', 'DashboardController', 'index');
+$router->addRoute('POST', '/dashboard/getOrderStats', 'DashboardController', 'getOrderStats');
 $router->addRoute('GET', '/logout', 'AuthController', 'logout');
 
 // Profile routes

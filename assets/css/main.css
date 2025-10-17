@@ -977,6 +977,28 @@ body.not-logged-in .main-content {
 }
 
 /* ========================================
+   18. DASHBOARD FILTER STYLES
+   ======================================== */
+.card-header .form-select,
+.card-header .form-control {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.card-header .form-select:focus,
+.card-header .form-control:focus {
+  background-color: white;
+  border-color: white;
+  box-shadow: none;
+}
+
+.card-header .input-group-text {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #495057;
+}
+
+/* ========================================
    16. RESPONSIVE DESIGN
    ======================================== */
 
@@ -1104,6 +1126,34 @@ body.not-logged-in .main-content {
 
   .alert {
     padding: 0.75rem 1rem;
+  }
+
+  /* Dashboard filter responsive */
+  .card-header .row.align-items-center {
+    gap: 0.5rem;
+  }
+
+  .card-header .col-md-6 {
+    width: 100%;
+  }
+
+  .card-header h5 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  #customDateContainer .input-group {
+    flex-wrap: nowrap;
+  }
+
+  #customDateContainer .form-control {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  #customDateContainer .input-group-text {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
   }
 }
 

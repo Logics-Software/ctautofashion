@@ -26,8 +26,8 @@ class ProcessWorkOrderModel {
             
             $params = [];
             
-            // Filter by UserID if TipeUser is Operator (0)
-            if ($tipeUser === 0 && !empty($userID)) {
+            // Filter by UserID if TipeUser is 0 or 1 (Operator/Staff)
+            if (($tipeUser === 0 || $tipeUser === 1) && !empty($userID)) {
                 $sql .= " AND H.UserID = ?";
                 $params[] = $userID;
             }
@@ -90,8 +90,8 @@ class ProcessWorkOrderModel {
             
             $params = [];
             
-            // Filter by UserID if TipeUser is Operator (0)
-            if ($tipeUser === 0 && !empty($userID)) {
+            // Filter by UserID if TipeUser is 0 or 1 (Operator/Staff)
+            if (($tipeUser === 0 || $tipeUser === 1) && !empty($userID)) {
                 $sql .= " AND H.UserID = ?";
                 $params[] = $userID;
             }

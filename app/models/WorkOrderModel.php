@@ -32,8 +32,8 @@ class WorkOrderModel {
             $params[] = $startDate;
             $params[] = $endDate . ' 23:59:59';
             
-            // Filter by UserID if TipeUser is Operator (0)
-            if ($tipeUser === 0 && !empty($userID)) {
+            // Filter by UserID if TipeUser is 0 or 1 (Operator/Staff)
+            if (($tipeUser === 0 || $tipeUser === 1) && !empty($userID)) {
                 $sql .= " AND H.UserID = ?";
                 $params[] = $userID;
             }
@@ -71,17 +71,10 @@ class WorkOrderModel {
             $params[] = $offset;
             $params[] = $offset + $limit;
             
-            // Debug: Log the query and parameters
-            error_log("SQL Query: " . $sql);
-            error_log("Parameters: " . print_r($params, true));
-            
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Debug: Log results count
-            error_log("Results count: " . count($results));
             
             
             // Ensure all required fields exist in each result
@@ -127,8 +120,8 @@ class WorkOrderModel {
             $params[] = $startDate;
             $params[] = $endDate . ' 23:59:59';
             
-            // Filter by UserID if TipeUser is Operator (0)
-            if ($tipeUser === 0 && !empty($userID)) {
+            // Filter by UserID if TipeUser is 0 or 1 (Operator/Staff)
+            if (($tipeUser === 0 || $tipeUser === 1) && !empty($userID)) {
                 $sql .= " AND H.UserID = ?";
                 $params[] = $userID;
             }
@@ -346,19 +339,71 @@ class WorkOrderModel {
     }
     
     /**
-     * Get order statistics by status
+     * Get order statistics by status with period filter
      */
-    public function getOrderStatistics() {
+    public function getOrderStatistics($period = 'today', $startDate = null, $endDate = null, $userID = null, $tipeUser = null) {
         try {
+            // Determine date range based on period
+            $dateCondition = "";
+            $params = [];
+            
+            switch ($period) {
+                case 'today':
+                    $dateCondition = "AND CAST(H.TanggalOrder AS DATE) = CAST(GETDATE() AS DATE)";
+                    break;
+                    
+                case 'yesterday':
+                    $dateCondition = "AND CAST(H.TanggalOrder AS DATE) = CAST(DATEADD(DAY, -1, GETDATE()) AS DATE)";
+                    break;
+                    
+                case 'this_week':
+                    $dateCondition = "AND H.TanggalOrder >= DATEADD(WEEK, DATEDIFF(WEEK, 0, GETDATE()), 0) 
+                                     AND H.TanggalOrder < DATEADD(WEEK, DATEDIFF(WEEK, 0, GETDATE()) + 1, 0)";
+                    break;
+                    
+                case 'this_month':
+                    $dateCondition = "AND MONTH(H.TanggalOrder) = MONTH(GETDATE()) 
+                                     AND YEAR(H.TanggalOrder) = YEAR(GETDATE())";
+                    break;
+                    
+                case 'this_year':
+                    $dateCondition = "AND YEAR(H.TanggalOrder) = YEAR(GETDATE())";
+                    break;
+                    
+                case 'custom':
+                    if ($startDate && $endDate) {
+                        $dateCondition = "AND H.TanggalOrder >= ? AND H.TanggalOrder <= ?";
+                        $params[] = $startDate;
+                        $params[] = $endDate . ' 23:59:59';
+                    }
+                    break;
+                    
+                default:
+                    $dateCondition = "AND CAST(H.TanggalOrder AS DATE) = CAST(GETDATE() AS DATE)";
+                    break;
+            }
+            
+            // Add UserID filter if TipeUser is 0 or 1 (Operator/Staff)
+            $userCondition = "";
+            // Convert to int for comparison to handle both string and integer
+            $tipeUserInt = (int)$tipeUser;
+            if ($tipeUserInt === 0 || $tipeUserInt === 1) {
+                if (!empty($userID)) {
+                    $userCondition = "AND H.UserID = ?";
+                    $params[] = $userID;
+                }
+            }
+            
             $sql = "SELECT 
-                        StatusOrder,
-                        COUNT(NoOrder) as TotalOrder
-                    FROM HeaderOrder
-                    GROUP BY StatusOrder
-                    ORDER BY StatusOrder";
+                        H.StatusOrder,
+                        COUNT(H.NoOrder) as TotalOrder
+                    FROM HeaderOrder H
+                    WHERE 1=1 $dateCondition $userCondition
+                    GROUP BY H.StatusOrder
+                    ORDER BY H.StatusOrder";
             
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
+            $stmt->execute($params);
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -383,23 +428,32 @@ class WorkOrderModel {
             // Calculate total
             $total = array_sum(array_column($statistics, 'count'));
             
+            // Force statistics to be encoded as JSON object, not array
+            // Convert to stdClass to ensure JSON encoding as object
+            $statisticsObject = new \stdClass();
+            foreach ($statistics as $key => $value) {
+                $statisticsObject->$key = $value;
+            }
+            
             return [
-                'statistics' => $statistics,
+                'statistics' => $statisticsObject,
                 'total' => $total
             ];
             
         } catch (PDOException $e) {
             error_log("Error getting order statistics: " . $e->getMessage());
             
+            // Force statistics to be encoded as JSON object, not array
+            $statisticsObject = new \stdClass();
+            $statisticsObject->{'0'} = ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'];
+            $statisticsObject->{'1'} = ['status' => 'Sedang diproses', 'count' => 0, 'color' => 'info'];
+            $statisticsObject->{'2'} = ['status' => 'Proses Selesai', 'count' => 0, 'color' => 'warning'];
+            $statisticsObject->{'3'} = ['status' => 'Faktur dibuat', 'count' => 0, 'color' => 'primary'];
+            $statisticsObject->{'4'} = ['status' => 'Telah dibayar', 'count' => 0, 'color' => 'success'];
+            $statisticsObject->{'5'} = ['status' => 'Dibatalkan', 'count' => 0, 'color' => 'danger'];
+            
             return [
-                'statistics' => [
-                    '0' => ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'],
-                    '1' => ['status' => 'Sedang diproses', 'count' => 0, 'color' => 'info'],
-                    '2' => ['status' => 'Proses Selesai', 'count' => 0, 'color' => 'warning'],
-                    '3' => ['status' => 'Faktur dibuat', 'count' => 0, 'color' => 'primary'],
-                    '4' => ['status' => 'Telah dibayar', 'count' => 0, 'color' => 'success'],
-                    '5' => ['status' => 'Dibatalkan', 'count' => 0, 'color' => 'danger']
-                ],
+                'statistics' => $statisticsObject,
                 'total' => 0
             ];
         }

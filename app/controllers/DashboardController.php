@@ -20,26 +20,63 @@ class DashboardController {
     public function index() {
         $user_data = $_SESSION['user_data'] ?? [];
         $user_name = $user_data['UserName'] ?? $user_data['Name'] ?? $user_data['user_name'] ?? $_SESSION['user_id'];
+        $user_id = $_SESSION['user_id'];
         
-        // Get monthly statistics for chart
-        $chartData = $this->workOrderModel->getMonthlyStatistics();
+        // Get TipeUser from session or user_data
+        $tipe_user = $_SESSION['tipe_user'] ?? $user_data['TipeUser'] ?? null;
         
-        // Get monthly revenue for chart
-        $revenueData = $this->workOrderModel->getMonthlyRevenue();
+        // Get monthly statistics for chart (only if TipeUser >= 2, excluding 0 and 1)
+        $chartData = null;
+        $revenueData = null;
+        if ((int)$tipe_user >= 2) {
+            $chartData = $this->workOrderModel->getMonthlyStatistics();
+            $revenueData = $this->workOrderModel->getMonthlyRevenue();
+        }
         
-        // Get order statistics by status
-        $orderStats = $this->workOrderModel->getOrderStatistics();
+        // Get order statistics by status (default: today)
+        // If Operator (TipeUser = 0), filter by UserID
+        $orderStats = $this->workOrderModel->getOrderStatistics('today', null, null, $user_id, $tipe_user);
         
         $data = [
-            'user_id' => $_SESSION['user_id'],
+            'user_id' => $user_id,
             'user_name' => $user_name,
             'user_data' => $user_data,
+            'tipe_user' => $tipe_user,
             'chartData' => $chartData,
             'revenueData' => $revenueData,
             'orderStats' => $orderStats
         ];
         
         $this->renderView('dashboard/index', $data);
+    }
+    
+    /**
+     * AJAX endpoint to get order statistics by period
+     */
+    public function getOrderStats() {
+        // Check if it's an AJAX request
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            return;
+        }
+        
+        // Get POST data
+        $period = $_POST['period'] ?? 'today';
+        $startDate = $_POST['start_date'] ?? null;
+        $endDate = $_POST['end_date'] ?? null;
+        
+        // Get user info from session
+        $user_id = $_SESSION['user_id'];
+        $user_data = $_SESSION['user_data'] ?? [];
+        $tipe_user = $_SESSION['tipe_user'] ?? $user_data['TipeUser'] ?? null;
+        
+        // Get statistics (filtered by UserID if Operator/Staff)
+        $orderStats = $this->workOrderModel->getOrderStatistics($period, $startDate, $endDate, $user_id, $tipe_user);
+        
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode($orderStats);
     }
     
     /**
