@@ -1,41 +1,13 @@
 /* ========================================
-   0. FONT DECLARATIONS - Inter Font Family (Local)
+   CTAutoFashion Application - Main Styles
    ======================================== */
-/* Inter Regular (400) */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("../fonts/inter/inter-400.woff2") format("woff2");
-}
 
-/* Inter Medium (500) */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("../fonts/inter/inter-500.woff2") format("woff2");
-}
+/* ========================================
+   0. FONT DECLARATIONS - Inter Font Family (Google Fonts)
+   ======================================== */
 
-/* Inter SemiBold (600) */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("../fonts/inter/inter-600.woff2") format("woff2");
-}
-
-/* Inter Bold (700) */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("../fonts/inter/inter-700.woff2") format("woff2");
-}
+/* Import Inter from Google Fonts - More reliable and optimized */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 /* ========================================
    1. BASE STYLES & RESET
@@ -85,6 +57,7 @@ body {
 
 .login-header p {
   color: #666;
+  font-size: 0.9rem;
 }
 
 .login-separator {
@@ -113,6 +86,7 @@ body {
   border: 2px solid #e9ecef;
   border-radius: 5px;
   padding: 5px 7px;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
 }
 
@@ -127,11 +101,13 @@ body {
 }
 
 .form-text {
+  font-size: 0.875rem;
   color: #6c757d;
 }
 
 .form-label {
   margin-bottom: 0.2rem;
+  font-size: 1rem;
 }
 
 /* ========================================
@@ -142,12 +118,15 @@ body {
   border: 2px solid #e9ecef;
   border-radius: 5px;
   padding: 5px 10px;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
 /* Styling untuk option select */
 .form-select option {
   padding: 0px 10px;
+  line-height: 0.8;
+  font-size: 0.85rem;
 }
 
 /* Styling khusus untuk dropdown options */
@@ -227,6 +206,7 @@ body {
   padding: 6px 8px;
   border: 1px solid #e9ecef;
   border-radius: 3px;
+  font-size: 0.85rem;
   outline: none;
 }
 
@@ -243,6 +223,7 @@ body {
 .dropdown-item {
   padding: 8px 12px;
   cursor: pointer;
+  font-size: 0.85rem;
   transition: background-color 0.2s ease;
   border-bottom: 1px solid #f8f9fa;
 }
@@ -286,6 +267,7 @@ body {
   border: 2px solid #e9ecef;
   border-radius: 10px;
   padding: 12px 15px;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
@@ -312,6 +294,7 @@ body {
   border: none;
   border-radius: 10px;
   padding: 12px 30px;
+  font-size: 1rem;
   font-weight: 600;
   color: white;
   width: 100%;
@@ -453,6 +436,7 @@ body {
 .offcanvas-title {
   color: white;
   font-weight: 600;
+  font-size: 1.2rem;
 }
 
 .btn-close {
@@ -494,6 +478,7 @@ body {
 .sidebar-link i {
   width: 20px;
   text-align: center;
+  font-size: 16px;
 }
 
 .sidebar-link.text-danger {
@@ -530,6 +515,7 @@ body {
   padding: 4px 8px !important;
   border-radius: 25px;
   transition: all 0.3s ease;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -551,6 +537,10 @@ body {
   margin: 0 4px;
 }
 
+.btn-profile i {
+  font-size: 16px;
+}
+
 /* Dropdown Menu */
 .dropdown-menu {
   border: none;
@@ -565,6 +555,7 @@ body {
 
 .dropdown-item {
   padding: 8px 12px;
+  font-size: 16px;
   transition: all 0.3s ease;
   border-radius: 4px;
   margin: 1px 1px;
@@ -848,6 +839,10 @@ body {
   background: rgba(102, 126, 234, 0.2);
 }
 
+.password-toggle-btn i {
+  font-size: 16px;
+}
+
 /* Password Strength Indicator */
 .password-strength-indicator {
   margin-top: 0.5rem;
@@ -870,6 +865,7 @@ body {
 }
 
 .strength-text {
+  font-size: 0.875rem;
   font-weight: 500;
   text-align: center;
 }
@@ -994,6 +990,7 @@ body.not-logged-in .main-content {
 
   .sidebar-link {
     padding: 10px 15px;
+    font-size: 14px;
   }
 
   /* Mobile Logo Control */
@@ -1013,9 +1010,14 @@ body.not-logged-in .main-content {
 
   .btn-profile {
     padding: 8px 10px !important;
+    font-size: 12px !important;
     min-height: 50px !important;
     display: flex !important;
     align-items: center !important;
+  }
+
+  .btn-profile i {
+    font-size: 14px !important;
   }
 
   .profile-photo-header {
@@ -1077,6 +1079,7 @@ body.not-logged-in .main-content {
 
   .dropdown-item {
     padding: 6px 8px;
+    font-size: 15px;
     margin: 1px 1px;
   }
 
@@ -1106,26 +1109,43 @@ body.not-logged-in .main-content {
   }
 
   .login-header h2 {
+    font-size: 2rem;
     margin-bottom: 1rem;
+  }
+
+  .login-header p {
+    font-size: 1.1rem;
   }
 
   .form-control {
     padding: 5px 10px;
+    font-size: 1rem;
     border-radius: 5px;
   }
 
   .form-control-login {
     padding: 15px 20px;
+    font-size: 1.1rem;
     border-radius: 12px;
   }
 
   .btn-login {
     padding: 15px 40px;
+    font-size: 1.1rem;
     border-radius: 12px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 2.5rem;
   }
 
   .nav-link {
     padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .card-body h5 {
+    font-size: 1.3rem;
   }
 
   .hamburger-menu-btn {
@@ -1167,6 +1187,7 @@ body.not-logged-in .main-content {
 
   .sidebar-link {
     padding: 14px 20px;
+    font-size: 15px;
   }
 
   .main-content .container {
@@ -1280,6 +1301,10 @@ body.not-logged-in .main-content {
     margin-bottom: 1.5rem;
   }
 
+  .fa-3x {
+    font-size: 2.5em !important;
+  }
+
   .logo {
     max-height: 32px;
     max-width: 140px;
@@ -1298,13 +1323,19 @@ body.not-logged-in .main-content {
     padding: 4rem;
   }
 
+  .login-header h2 {
+    font-size: 2.5rem;
+  }
+
   .form-control {
     padding: 5px 10px;
+    font-size: 0.9rem;
     border-radius: 5px;
   }
 
   .btn-login {
     padding: 18px 50px;
+    font-size: 1.2rem;
   }
 
   .form-control {
@@ -1367,6 +1398,7 @@ body.not-logged-in .main-content {
 
   .sidebar-link {
     padding: 16px 25px;
+    font-size: 16px;
   }
 
   .main-content .container {
@@ -1386,6 +1418,208 @@ body.not-logged-in .main-content {
   }
 }
 
+/* ========================================
+   17. MAIN TABLE STYLES
+   ======================================== */
+
+/* Main Table Container */
+.main-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: white;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+  border: 1px solid #dadcdf;
+}
+
+/* Main Table Header */
+.main-table thead th {
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  background: #676768;
+  color: white;
+  font-weight: 600;
+  padding: 1rem 0.75rem;
+  border: 1px solid #dadcdf;
+  border-bottom: 2px solid #dadcdf;
+  position: relative;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.main-table thead th.sortable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.main-table thead th.sortable:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+}
+
+.main-table thead th.sortable i {
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.main-table thead th.sortable:hover i {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Main Table Body */
+.main-table tbody tr {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #dadcdf;
+}
+
+.main-table tbody tr:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.05) 0%,
+    rgba(118, 75, 162, 0.05) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.main-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Add vertical borders for header columns */
+.main-table thead th:not(:last-child) {
+  border-right: 1px solid #dadcdf;
+}
+
+/* Remove duplicate border from header since it's already defined */
+.main-table thead th {
+  border-left: none;
+  border-top: none;
+}
+
+.main-table tbody td {
+  padding: 0.5rem 0.5rem;
+  border: 1px solid #dadcdf;
+  border-top: none;
+  border-left: none;
+  vertical-align: middle;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+/* Product Name Styling */
+.main-table tbody td.data-utama {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Price Styling */
+.main-table tbody td.data-harga {
+  font-weight: 600;
+  color: #197c30;
+  font-size: 0.9rem;
+}
+
+/* Stock Styling */
+.main-table tbody td.data-stok .badge {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.main-table tbody td.data-stok .badge.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.main-table tbody td.data-stok .badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%) !important;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+/* Empty State */
+.main-table tbody tr td[colspan] {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.main-table tbody tr td[colspan] i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  display: block;
+}
+
+/* Table Responsive */
+@media (max-width: 768px) {
+  .main-table {
+    font-size: 0.8rem;
+  }
+
+  .main-table thead th {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .main-table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .main-table tbody td:last-child .badge {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* Table Sorting Indicators */
+.main-table .sort-indicator {
+  display: inline-block;
+  margin-left: 0.5rem;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.main-table .sort-indicator.active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Table Loading State */
+.main-table.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.main-table.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 /* ========================================
    MODAL CUSTOM STYLES
    ======================================== */
@@ -1499,12 +1733,43 @@ body.not-logged-in .main-content {
 }
 
 /* Detail table styles */
+.detail-table td {
+  padding: 0.25rem 0.5rem;
+  vertical-align: top;
+  line-height: 1.2;
+}
+
+.detail-table tr td:first-child {
+  color: #495057;
+}
+
+/* Process Work Order specific - more compact */
+.process-workorder .detail-table td {
+  padding: 0.1rem 0.5rem;
+}
+
+/* Modal table styles */
+#detailModal .table {
+  margin-bottom: 0;
+}
+
+#detailModal .table td,
+#detailModal .table th {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+#detailModal .badge {
+  font-size: 0.85rem;
+  padding: 0.35em 0.65em;
+}
 
 /* Modal close button styling */
 #detailModal .btn-close,
 #prosesModal .btn-close,
 #selesaiModal .btn-close,
 #batalModal .btn-close {
+  font-size: 1rem;
   opacity: 1;
 }
 
@@ -1523,6 +1788,118 @@ body.not-logged-in .main-content {
     width: 90% !important;
     margin: 1.75rem auto;
   }
+}
+
+/* ========================================
+   RESPONSIVE TABLES - Tablet & Mobile
+   ======================================== */
+
+/* Tablet styles (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .main-table {
+    font-size: 0.75rem !important;
+    table-layout: fixed !important;
+  }
+  
+  .main-table th,
+  .main-table td {
+    padding: 0.4rem 0.3rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .main-table th {
+    font-weight: 600 !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .main-table .badge {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.4rem !important;
+  }
+  
+  .main-table .data-utama {
+    font-weight: 600 !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .table-responsive {
+    font-size: 0.75rem;
+  }
+  
+  .main-table tbody tr {
+    height: auto !important;
+    min-height: 2.5rem;
+  }
+}
+
+/* Extra small tablets (576px - 768px) */
+@media (max-width: 768px) and (min-width: 576px) {
+  .main-table {
+    font-size: 0.7rem !important;
+  }
+  
+  .main-table th,
+  .main-table td {
+    padding: 0.3rem 0.2rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .main-table th {
+    font-size: 0.65rem !important;
+  }
+  
+  .main-table .badge {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.3rem !important;
+  }
+  
+  .main-table .data-utama {
+    font-size: 0.65rem !important;
+  }
+}
+
+/* ========================================
+   RESPONSIVE COLUMNS - Work Order Table
+   ======================================== */
+
+/* Column widths for Informasi Work Order (with Alamat column) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .workorder-table .main-table th:nth-child(1), 
+  .workorder-table .main-table td:nth-child(1) { width: 12%; }
+  .workorder-table .main-table th:nth-child(2), 
+  .workorder-table .main-table td:nth-child(2) { width: 10%; }
+  .workorder-table .main-table th:nth-child(3), 
+  .workorder-table .main-table td:nth-child(3) { width: 15%; }
+  .workorder-table .main-table th:nth-child(4), 
+  .workorder-table .main-table td:nth-child(4) { width: 20%; }
+  .workorder-table .main-table th:nth-child(5), 
+  .workorder-table .main-table td:nth-child(5) { width: 10%; }
+  .workorder-table .main-table th:nth-child(6), 
+  .workorder-table .main-table td:nth-child(6) { width: 8%; }
+  .workorder-table .main-table th:nth-child(7), 
+  .workorder-table .main-table td:nth-child(7) { width: 15%; }
+  .workorder-table .main-table th:nth-child(8), 
+  .workorder-table .main-table td:nth-child(8) { width: 10%; }
+}
+
+/* Column widths for Proses Work Order (without Alamat column) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .process-workorder-table .main-table th:nth-child(1), 
+  .process-workorder-table .main-table td:nth-child(1) { width: 12%; }
+  .process-workorder-table .main-table th:nth-child(2), 
+  .process-workorder-table .main-table td:nth-child(2) { width: 10%; }
+  .process-workorder-table .main-table th:nth-child(3), 
+  .process-workorder-table .main-table td:nth-child(3) { width: 25%; }
+  .process-workorder-table .main-table th:nth-child(5), 
+  .process-workorder-table .main-table td:nth-child(5) { width: 12%; }
+  .process-workorder-table .main-table th:nth-child(6), 
+  .process-workorder-table .main-table td:nth-child(6) { width: 12%; }
+  .process-workorder-table .main-table th:nth-child(7), 
+  .process-workorder-table .main-table td:nth-child(7) { width: 17%; }
+  .process-workorder-table .main-table th:nth-child(8), 
+  .process-workorder-table .main-table td:nth-child(8) { width: 12%; }
 }
 
 /* ========================================
