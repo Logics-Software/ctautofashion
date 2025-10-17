@@ -47,7 +47,7 @@ $title = 'Informasi Transaksi Work Order';
                                class="form-control" 
                                name="search" 
                                value="<?php echo htmlspecialchars($filters['search']); ?>" 
-                               placeholder="Cari berdasarkan No Order, Customer, No Polisi, atau Nama Kendaraan..."
+                               placeholder="Cari No Order, Customer, No Polisi, atau Kendaraan..."
                                aria-label="Search">
                         <button class="btn btn-sm btn-outline-primary" type="submit">
                             <i class="fas fa-search"></i> Cari
@@ -167,7 +167,7 @@ $title = 'Informasi Transaksi Work Order';
                         
                         <!-- Vehicle Filter -->
                         <div class="col-md-4">
-                            <label for="no_polisi" class="form-label">No Polisi</label>
+                            <label for="no_polisi" class="form-label">Kendaraan</label>
                             <div class="custom-dropdown" id="vehicleDropdown">
                                 <div class="dropdown-trigger" onclick="toggleDropdown('vehicle')">
                                     <input type="text" 
@@ -295,7 +295,7 @@ $title = 'Informasi Transaksi Work Order';
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($workOrders as $workOrder): ?>
-                                    <tr>
+                                    <tr class="clickable-row" onclick="showWorkOrderDetail('<?php echo htmlspecialchars($workOrder['NoOrder']); ?>')" style="cursor: pointer;">
                                         <td class="data-utama">
                                             <strong><?php echo htmlspecialchars($workOrder['NoOrder']); ?></strong>
                                         </td>
@@ -415,6 +415,163 @@ $title = 'Informasi Transaksi Work Order';
                 </div>
             </div>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- Modal Detail Work Order -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detailModalLabel">
+                    <i class="fa-solid fa-wrench me-2"></i>Detail Work Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- Loading Spinner -->
+                <div class="text-center py-5" id="loadingSpinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Memuat data...</p>
+                </div>
+                
+                <!-- Detail Content (will be populated by AJAX) -->
+                <div id="detailContent" style="display: none;">
+                    <!-- Header Information -->
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm detail-table">
+                                    <tr>
+                                        <td width="40%"><strong>Nomor WO</strong></td>
+                                        <td width="5%">:</td>
+                                        <td id="detail_noorder">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tanggal Order</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_tanggal">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Kendaraan</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_kendaraan">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>No Polisi</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_nopolisi">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td width="40%"><strong>Warna</strong></td>
+                                        <td width="5%">:</td>
+                                        <td id="detail_warna">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Marketing</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_marketing">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Customer</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_customer">-</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm detail-table">
+                                    <tr>
+                                        <td><strong>Alamat</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_alamat">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>No Telepon</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_telepon">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>No.Invoice</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_noinvoice">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tgl.Invoice</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_tglinvoice">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Jasa</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_totaljasa"><strong>-</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Barang</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_totalbarang"><strong>-</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Order</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_totalorder" class="text-danger"><strong>-</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Transactions -->
+                    <div class="detail-section mb-4">
+                        <h6 class="section-title"><i class="fa-solid fa-wrench me-2"></i>Transaksi Service</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nama Jasa</th>
+                                        <th>Mekanik</th>
+                                        <th width="10%">QTY</th>
+                                        <th width="15%">Tarif</th>
+                                        <th width="15%">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail_services">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Tidak ada data service</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Item Transactions -->
+                    <div class="detail-section">
+                        <h6 class="section-title"><i class="fa-solid fa-gears me-2"></i>Transaksi Barang</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nama Barang</th>
+                                        <th>Merek</th>
+                                        <th width="10%">Satuan</th>
+                                        <th width="8%">QTY</th>
+                                        <th width="15%">Harga</th>
+                                        <th width="15%">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail_items">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Tidak ada data barang</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -634,6 +791,127 @@ function submitCustomDate() {
     // Redirect to the same page with new parameters
     window.location.href = '?' + params.toString();
 }
+
+// Show Work Order Detail Modal
+function showWorkOrderDetail(noOrder) {
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    modal.show();
+    
+    // Show loading spinner, hide content
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('detailContent').style.display = 'none';
+    
+    // Fetch data via AJAX
+    const basePath = '<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>';
+    const url = basePath + '/workorder?ajax=get_detail&noorder=' + encodeURIComponent(noOrder);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                modal.hide();
+                return;
+            }
+            
+            // Populate header information
+            document.getElementById('detail_noorder').textContent = data.header.NoOrder || '-';
+            document.getElementById('detail_tanggal').textContent = data.header.TanggalOrder ? 
+                formatDate(data.header.TanggalOrder) : '-';
+            document.getElementById('detail_kendaraan').textContent = data.header.NamaKendaraan || '-';
+            document.getElementById('detail_nopolisi').textContent = data.header.NoPolisi || '-';
+            document.getElementById('detail_warna').textContent = data.header.Warna || '-';
+            document.getElementById('detail_marketing').textContent = data.header.Marketing || '-';
+            document.getElementById('detail_customer').textContent = data.header.NamaCustomer || '-';
+            document.getElementById('detail_alamat').textContent = data.header.AlamatCustomer || '-';
+            document.getElementById('detail_telepon').textContent = data.header.NoTelepon || '-';
+            document.getElementById('detail_noinvoice').textContent = data.header.NoInvoice || '-';
+            document.getElementById('detail_tglinvoice').textContent = data.header.TglInvoice ? 
+                formatDate(data.header.TglInvoice) : '-';
+            document.getElementById('detail_totaljasa').innerHTML = '<strong>' + formatNumber(data.header.TotalJasa || 0) + '</strong>';
+            document.getElementById('detail_totalbarang').innerHTML = '<strong>' + formatNumber(data.header.TotalBarang || 0) + '</strong>';
+            document.getElementById('detail_totalorder').innerHTML = '<strong>' + formatNumber(data.header.TotalOrder || 0) + '</strong>';
+            
+            // Populate service transactions
+            const servicesBody = document.getElementById('detail_services');
+            servicesBody.innerHTML = '';
+            
+            if (data.services && data.services.length > 0) {
+                data.services.forEach(service => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${escapeHtml(service.NamaJasa || '-')}</td>
+                        <td>${escapeHtml(service.Mekanik || '-')}</td>
+                        <td class="text-center"><span class="badge bg-info">${parseInt(service.Qty) || 0}</span></td>
+                        <td class="text-end">${formatNumber(service.Tarif || 0)}</td>
+                        <td class="text-end"><strong>${formatNumber(service.Total || 0)}</strong></td>
+                    `;
+                    servicesBody.appendChild(row);
+                });
+            } else {
+                servicesBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada data service</td></tr>';
+            }
+            
+            // Populate item transactions
+            const itemsBody = document.getElementById('detail_items');
+            itemsBody.innerHTML = '';
+            
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${escapeHtml(item.NamaBarang || '-')}</td>
+                        <td>${escapeHtml(item.MerekBarang || '-')}</td>
+                        <td class="text-center">${escapeHtml(item.Satuan || '-')}</td>
+                        <td class="text-center"><span class="badge bg-success">${parseInt(item.Qty) || 0}</span></td>
+                        <td class="text-end">${formatNumber(item.Harga || 0)}</td>
+                        <td class="text-end"><strong>${formatNumber(item.Total || 0)}</strong></td>
+                    `;
+                    itemsBody.appendChild(row);
+                });
+            } else {
+                itemsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada data barang</td></tr>';
+            }
+            
+            // Hide loading, show content
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('detailContent').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memuat data');
+            modal.hide();
+        });
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+// Helper function to format number
+function formatNumber(number) {
+    if (!number) return '0';
+    return Number(number).toLocaleString('id-ID');
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 </script>
 
 <style>
@@ -712,5 +990,71 @@ function submitCustomDate() {
     .main-table .data-utama {
         font-size: 0.65rem !important;
     }
+}
+
+/* Modal Detail Styles */
+.detail-section {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.section-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.detail-table td {
+    padding: 0.25rem 0.5rem;
+    vertical-align: top;
+    line-height: 1.2;
+}
+
+.detail-table tr td:first-child {
+    color: #495057;
+}
+
+.clickable-row:hover {
+    background-color: #f1f3f5 !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Modal table styles */
+#detailModal .table {
+    margin-bottom: 0;
+}
+
+#detailModal .table td,
+#detailModal .table th {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+#detailModal .badge {
+    font-size: 0.85rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Modal width for Tablet - 90% of screen width */
+@media (min-width: 768px) and (max-width: 1024px) {
+    #detailModal .modal-dialog {
+        max-width: 90% !important;
+        width: 90% !important;
+        margin: 1.75rem auto;
+    }
+}
+
+/* Modal close button styling */
+#detailModal .btn-close {
+    font-size: 1rem;
+    opacity: 1;
+}
+
+#detailModal .btn-close:hover {
+    transform: scale(1.2);
+    transition: all 0.2s ease;
 }
 </style>

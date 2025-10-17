@@ -149,7 +149,7 @@ $title = 'Informasi Kendaraan';
                             <input type="text" 
                                    id="vehicleSearch" 
                                    class="form-control" 
-                                   placeholder="Cari berdasarkan nomor polisi, nama kendaraan, merek, atau nama customer..."
+                                   placeholder="Cari nomor polisi, kendaraan, merek, atau customer..."
                                    autocomplete="off">
                             <button class="btn btn-outline-primary" type="button" onclick="searchVehicles()">
                                 <i class="fas fa-search"></i>

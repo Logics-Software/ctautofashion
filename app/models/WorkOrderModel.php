@@ -10,7 +10,7 @@ class WorkOrderModel {
     /**
      * Get work orders with filters
      */
-    public function getWorkOrders($filters, $limit, $offset) {
+    public function getWorkOrders($filters, $limit, $offset, $userID = null, $tipeUser = null) {
         try {
             // Query with filters - SQL Server pagination using ROW_NUMBER()
             $sql = "SELECT * FROM (
@@ -31,6 +31,12 @@ class WorkOrderModel {
             
             $params[] = $startDate;
             $params[] = $endDate . ' 23:59:59';
+            
+            // Filter by UserID if TipeUser is Operator (0)
+            if ($tipeUser === 0 && !empty($userID)) {
+                $sql .= " AND H.UserID = ?";
+                $params[] = $userID;
+            }
             
             // Status filter
             if (!empty($filters['status'])) {
@@ -103,7 +109,7 @@ class WorkOrderModel {
     /**
      * Get total work orders count with filters
      */
-    public function getTotalWorkOrders($filters) {
+    public function getTotalWorkOrders($filters, $userID = null, $tipeUser = null) {
         try {
             // Count query with all filters
             $sql = "SELECT COUNT(*) as total 
@@ -120,6 +126,12 @@ class WorkOrderModel {
             
             $params[] = $startDate;
             $params[] = $endDate . ' 23:59:59';
+            
+            // Filter by UserID if TipeUser is Operator (0)
+            if ($tipeUser === 0 && !empty($userID)) {
+                $sql .= " AND H.UserID = ?";
+                $params[] = $userID;
+            }
             
             // Status filter
             if (!empty($filters['status'])) {
@@ -253,6 +265,85 @@ class WorkOrderModel {
         }
     }
     
+    
+    /**
+     * Get work order detail by NoOrder
+     */
+    public function getWorkOrderDetail($noOrder) {
+        try {
+            // Trim whitespace from NoOrder
+            $noOrder = trim($noOrder);
+            
+            // Get header information from HeaderOrder with HeaderPenjualan JOIN
+            $sqlHeader = "SELECT H.NoOrder, H.TanggalOrder, H.StatusOrder, 
+                                 H.KodeCustomer, H.KodeKendaraan, 
+                                 ISNULL(J.NoPenjualan,'') AS NoInvoice, 
+                                 J.TanggalPenjualan AS TglInvoice,
+                                 C.NamaCustomer, C.AlamatCustomer, C.NoTelepon,
+                                 K.NoPolisi, K.NamaKendaraan, K.Warna,
+                                 P.NamaPicker as Marketing,
+                                 H.TotalJasa, H.TotalBarang, H.TotalOrder
+                          FROM HeaderOrder H
+                          LEFT JOIN FilePicker P ON H.KodePicker = P.KodePicker
+                          LEFT JOIN HeaderPenjualan J ON H.NoOrder = J.NoOrder
+                          LEFT JOIN FileCustomer C ON H.KodeCustomer = C.KodeCustomer
+                          LEFT JOIN FileKendaraan K ON H.KodeKendaraan = K.KodeKendaraan
+                          WHERE H.NoOrder = ?";
+            
+            $stmtHeader = $this->pdo->prepare($sqlHeader);
+            $stmtHeader->execute([$noOrder]);
+            $header = $stmtHeader->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$header) {
+                return null;
+            }
+            
+            // Get service transactions from DetailOrderJasa
+            $sqlService = "SELECT DOJ.NamaJasa, ISNULL(M.NamaMontir,'') AS Mekanik,
+                                DOJ.Jumlah AS Qty, 
+                                DOJ.HargaSatuan AS Tarif,
+                                DOJ.TotalHarga AS Total
+                            FROM DetailOrderJasa DOJ
+                            INNER JOIN HeaderOrder HO ON DOJ.NoOrder = HO.NoOrder
+                            LEFT JOIN FileMontir M ON HO.KodeMontir = M.KodeMontir
+                            WHERE DOJ.NoOrder = ?";
+            
+            $stmtService = $this->pdo->prepare($sqlService);
+            $stmtService->execute([$noOrder]);
+            $services = $stmtService->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get item transactions from DetailOrderBarang
+            $sqlItem = "SELECT DOB.NamaBarang, 
+                              M.NamaMerek AS MerekBarang,
+							  J.NamaJenis AS JenisBarang,
+                              DOB.Satuan, 
+                              DOB.Jumlah AS Qty, 
+                              DOB.HargaSatuan AS Harga,
+                              DOB.TotalHarga AS Total
+                       FROM DetailOrderBarang DOB
+					   INNER JOIN FileBarang B ON DOB.KodeBarang = B.KodeBarang
+					   INNER JOIN TabelMerek M ON B.KodeMerek = M.KodeMerek
+					   INNER JOIN TabelJenis J ON B.KodeJenis = J.KodeJenis
+                       WHERE DOB.NoOrder = ?";
+            
+            $stmtItem = $this->pdo->prepare($sqlItem);
+            $stmtItem->execute([$noOrder]);
+            $items = $stmtItem->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Add status text
+            $header['StatusText'] = $this->getStatusText($header['StatusOrder']);
+            
+            return [
+                'header' => $header,
+                'services' => $services,
+                'items' => $items
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error getting work order detail: " . $e->getMessage());
+            return null;
+        }
+    }
     
     /**
      * Get status text from status code

@@ -130,6 +130,9 @@ $router->addRoute('POST', '/vehicle', 'VehicleController', 'selectVehicle');
 // Work Order routes
 $router->addRoute('GET', '/workorder', 'WorkOrderController', 'index');
 
+// Process Work Order routes
+$router->addRoute('GET', '/processworkorder', 'ProcessWorkOrderController', 'index');
+$router->addRoute('POST', '/processworkorder', 'ProcessWorkOrderController', 'index');
+
 // Dispatch the request
 $router->dispatch();
-?>

@@ -116,7 +116,7 @@ $title = 'Dashboard';
         <!-- Quick Actions -->
         <div class="row mt-4">
             <div class="col-12">
-                <h4><i class="fas fa-bolt me-2 text-warning"></i>Informasi</h4>
+                <h4><i class="fas fa-bolt me-2 text-warning"></i>Informasi Harga, Stok, dan Transaksi</h4>
             </div>
         </div>
         
@@ -126,7 +126,7 @@ $title = 'Dashboard';
                     <div class="card-body card-hover-warning text-center">
                         <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
                         <h6 class="card-title fw-bold">Informasi Daftar Harga dan Stok Barang</h6>
-                        <p class="card-text text-muted small">Lihat informasi harga dan stok barang terbaru</p>
+                        <p class="card-text text-muted small">Lihat informasi lengkap tentang harga jual dan stok barang terbaru<br/><br/></p>
                         <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/products" class="btn btn-outline-warning btn-sm">
                             <i class="fas fa-eye me-1"></i>Lihat Detail
                         </a>

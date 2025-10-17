@@ -23,8 +23,11 @@ class UserModel {
             
             foreach ($tableNames as $tableName) {
                 try {
-                    // First try exact match (case sensitive)
-                    $sql = "SELECT * FROM [$tableName] WHERE UserID = ? AND PasswordOnline = ?";
+                    // First try exact match (case sensitive) with TipeUser JOIN
+                    $sql = "SELECT U.*, T.TipeUser 
+                            FROM [$tableName] U
+                            LEFT JOIN TipeUser T ON U.UserID = T.UserID
+                            WHERE U.UserID = ? AND U.PasswordOnline = ?";
                     $stmt = $this->pdo->prepare($sql);
                     $stmt->execute([$userid, $password]);
                     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -33,8 +36,11 @@ class UserModel {
                         return $user;
                     }
                     
-                    // Then try case-insensitive match
-                    $sql = "SELECT * FROM [$tableName] WHERE UPPER(UserID) = ? AND UPPER(PasswordOnline) = ?";
+                    // Then try case-insensitive match with TipeUser JOIN
+                    $sql = "SELECT U.*, T.TipeUser 
+                            FROM [$tableName] U
+                            LEFT JOIN TipeUser T ON U.UserID = T.UserID
+                            WHERE UPPER(U.UserID) = ? AND UPPER(U.PasswordOnline) = ?";
                     $stmt = $this->pdo->prepare($sql);
                     $stmt->execute([$userid_upper, $password_upper]);
                     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -58,7 +64,10 @@ class UserModel {
      */
     public function getUserById($userid) {
         try {
-            $sql = "SELECT * FROM _FileUser WHERE UPPER(UserID) = ?";
+            $sql = "SELECT U.*, T.TipeUser 
+                    FROM _FileUser U
+                    LEFT JOIN TipeUser T ON U.UserID = T.UserID
+                    WHERE UPPER(U.UserID) = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([strtoupper($userid)]);
             

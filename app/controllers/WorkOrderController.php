@@ -40,9 +40,13 @@ class WorkOrderController {
         // Initialize WorkOrderModel
         $workOrderModel = new WorkOrderModel();
         
-        // Get work orders with filters
-        $workOrders = $workOrderModel->getWorkOrders($filters, $limit, $offset);
-        $totalWorkOrders = $workOrderModel->getTotalWorkOrders($filters);
+        // Get user type from session
+        $tipeUser = isset($_SESSION['tipe_user']) ? (int)$_SESSION['tipe_user'] : null;
+        $userID = $_SESSION['user_id'] ?? null;
+        
+        // Get work orders with filters (with role-based access)
+        $workOrders = $workOrderModel->getWorkOrders($filters, $limit, $offset, $userID, $tipeUser);
+        $totalWorkOrders = $workOrderModel->getTotalWorkOrders($filters, $userID, $tipeUser);
         
         // Get filter options
         $customers = $workOrderModel->getCustomers();
@@ -93,11 +97,50 @@ class WorkOrderController {
                 case 'get_vehicles':
                     $this->searchVehicles();
                     break;
+                case 'get_detail':
+                    $this->getWorkOrderDetail();
+                    break;
                 default:
                     http_response_code(404);
                     echo json_encode(['error' => 'AJAX action not found']);
                     exit;
             }
+        }
+    }
+    
+    /**
+     * Handle AJAX request for work order detail
+     */
+    public function getWorkOrderDetail() {
+        // Clear any previous output
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        $noOrder = $_GET['noorder'] ?? '';
+        
+        if (empty($noOrder)) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => 'No Order tidak ditemukan']);
+            exit;
+        }
+        
+        try {
+            $workOrderModel = new WorkOrderModel();
+            $detail = $workOrderModel->getWorkOrderDetail($noOrder);
+            
+            if ($detail) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($detail, JSON_UNESCAPED_UNICODE);
+            } else {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'Data tidak ditemukan']);
+            }
+            exit;
+        } catch (Exception $e) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => 'Terjadi kesalahan saat mengambil data']);
+            exit;
         }
     }
     

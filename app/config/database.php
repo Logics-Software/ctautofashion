@@ -21,4 +21,3 @@ try {
 
 // Make PDO connection globally available
 $GLOBALS['pdo'] = $pdo;
-?>

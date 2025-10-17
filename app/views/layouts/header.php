@@ -95,9 +95,20 @@ if ($is_logged_in) {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <hr class="my-3">
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/profile">
                                 <i class="fas fa-list-check me-2"></i>Buat Work Order Baru
                             </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/processworkorder">
+                                <i class="fa-solid fa-gears me-2"></i>Proses Work Order
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <hr class="my-3">
                         </li>
                         <li class="nav-item">
                             <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/workorder">
@@ -117,11 +128,6 @@ if ($is_logged_in) {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/vehicle">
                                 <i class="fa-solid fa-car me-2"></i>Informasi Service Kendaraan
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="#">
-                                <i class="fa-solid fa-folder-open me-2"></i>Laporan
                             </a>
                         </li>
                         <li class="nav-item">

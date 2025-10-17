@@ -1651,3 +1651,27 @@ body.not-logged-in .main-content {
 /* ========================================
    END OF TABLE STYLES
    ======================================== */
+
+/* ========================================
+   Placeholder Styling
+   ======================================== */
+
+.form-control::placeholder {
+  color: #bfc5cc;
+  opacity: 0.7;
+}
+
+.form-control::-webkit-input-placeholder {
+  color: #adb5bd;
+  opacity: 0.7;
+}
+
+.form-control::-moz-placeholder {
+  color: #adb5bd;
+  opacity: 0.7;
+}
+
+.form-control:-ms-input-placeholder {
+  color: #adb5bd;
+  opacity: 0.7;
+}

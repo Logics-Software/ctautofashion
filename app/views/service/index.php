@@ -146,7 +146,7 @@ $title = 'Informasi Service';
                             <input type="text" 
                                    id="customerSearch" 
                                    class="form-control" 
-                                   placeholder="Cari berdasarkan nama customer, telepon, atau nomor polisi..."
+                                   placeholder="Cari nama customer, telepon, atau nomor polisi..."
                                    autocomplete="off">
                             <button class="btn btn-outline-primary" type="button" onclick="searchCustomers()">
                                 <i class="fas fa-search"></i>
