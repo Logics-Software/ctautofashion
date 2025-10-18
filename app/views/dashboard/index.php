@@ -27,7 +27,7 @@ $title = 'Dashboard';
                     <div class="card-body card-hover-warning text-center">
                         <i class="fas fa-briefcase fa-3x text-warning mb-3"></i>
                         <h5 class="card-title fw-bold">Input Data Work Order Baru</h5>
-                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/#" class="btn btn-warning btn">
+                        <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/transaksi-work-order" class="btn btn-warning btn">
                             <i class="fas fa-edit me-2"></i>Buat Order
                         </a>
                     </div>

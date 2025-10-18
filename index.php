@@ -135,5 +135,25 @@ $router->addRoute('GET', '/workorder', 'WorkOrderController', 'index');
 $router->addRoute('GET', '/processworkorder', 'ProcessWorkOrderController', 'index');
 $router->addRoute('POST', '/processworkorder', 'ProcessWorkOrderController', 'index');
 
+// Transaksi Work Order routes
+$router->addRoute('GET', '/transaksi-work-order', 'TransaksiWorkOrderController', 'index');
+$router->addRoute('POST', '/transaksi-work-order', 'TransaksiWorkOrderController', 'index');
+$router->addRoute('GET', '/transaksi-work-order/search-customers', 'TransaksiWorkOrderController', 'searchCustomers');
+$router->addRoute('GET', '/transaksi-work-order/get-customer', 'TransaksiWorkOrderController', 'getCustomer');
+$router->addRoute('GET', '/transaksi-work-order/search-vehicles', 'TransaksiWorkOrderController', 'searchVehicles');
+$router->addRoute('GET', '/transaksi-work-order/get-vehicle', 'TransaksiWorkOrderController', 'getVehicle');
+$router->addRoute('GET', '/transaksi-work-order/search-jasa', 'TransaksiWorkOrderController', 'searchJasa');
+$router->addRoute('GET', '/transaksi-work-order/get-jasa', 'TransaksiWorkOrderController', 'getJasa');
+$router->addRoute('GET', '/transaksi-work-order/search-barang', 'TransaksiWorkOrderController', 'searchBarang');
+$router->addRoute('GET', '/transaksi-work-order/get-barang', 'TransaksiWorkOrderController', 'getBarang');
+$router->addRoute('GET', '/transaksi-work-order/search-montir', 'TransaksiWorkOrderController', 'searchMontir');
+$router->addRoute('GET', '/transaksi-work-order/get-montir', 'TransaksiWorkOrderController', 'getMontir');
+$router->addRoute('GET', '/transaksi-work-order/search-picker', 'TransaksiWorkOrderController', 'searchPicker');
+$router->addRoute('GET', '/transaksi-work-order/get-picker', 'TransaksiWorkOrderController', 'getPicker');
+$router->addRoute('GET', '/transaksi-work-order/get-detail', 'TransaksiWorkOrderController', 'getDetail');
+$router->addRoute('GET', '/transaksi-work-order/get-data-for-edit', 'TransaksiWorkOrderController', 'getDataForEdit');
+$router->addRoute('POST', '/transaksi-work-order/save', 'TransaksiWorkOrderController', 'save');
+$router->addRoute('POST', '/transaksi-work-order/update', 'TransaksiWorkOrderController', 'update');
+
 // Dispatch the request
 $router->dispatch();

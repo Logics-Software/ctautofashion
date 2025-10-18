@@ -95,7 +95,7 @@ $title = 'Informasi Kendaraan';
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card-header">
-                        <h5 class="mb-0">
+                        <h5 class="mb-2">
                             <i class="fas fa-list me-2"></i>
                             Daftar Transaksi Kendaraan
                         </h5>
@@ -145,142 +145,139 @@ $title = 'Informasi Kendaraan';
                 <!-- Search Form -->
                 <div class="row mb-3">
                     <div class="col-12">
-                        <div class="input-group">
-                            <input type="text" 
-                                   id="vehicleSearch" 
-                                   class="form-control" 
-                                   placeholder="Cari nomor polisi, kendaraan, merek, atau customer..."
-                                   autocomplete="off">
-                            <button class="btn btn-outline-primary" type="button" onclick="searchVehicles()">
-                                <i class="fas fa-search"></i>
-                            </button>
+                        <label class="form-label">Kendaraan <span class="text-danger">*</span></label>
+                        <select class="form-select" id="selectVehicleModal" name="KodeKendaraan" required>
+                            <option value="">Pilih Kendaraan...</option>
+                        </select>
+                        <div class="mb-2" style="margin-top: -15px;" id="vehicleInfoModal" style="display: none;">
+                            <div class="info-empesis p-2 rounded">
+                                <small class="text-muted">
+                                    <div>
+                                        <strong>No Polisi:</strong>
+                                        <span id="vehicleNoPolisiModal">-</span>
+                                    </div>
+                                    <div>
+                                        <strong>Tipe:</strong>
+                                        <span id="vehicleTipeModal">-</span>
+                                    </div>
+                                    <div>
+                                        <strong>Tahun:</strong>
+                                        <span id="vehicleTahunModal">-</span> |
+                                        <strong>Warna:</strong>
+                                        <span id="vehicleWarnaModal">-</span>
+                                    </div>
+                                </small>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Search Results -->
-                <div id="vehicleResults">
-                    <div class="text-center py-4 text-muted">
-                        <i class="fas fa-search fa-2x mb-2"></i>
-                        <p>Masukkan kata kunci untuk mencari kendaraan</p>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" id="btnSelectVehicleModal">Pilih Kendaraan</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Choices.js CSS -->
+<link href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/css/choices.min.css" rel="stylesheet">
+
+<!-- Choices.js JS -->
+<script src="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/js/choices.min.js"></script>
+
 <script>
 let selectedVehicleCode = '<?php echo $selected_vehicle['code'] ?? ''; ?>';
+let vehicleChoice;
+
+// Initialize Choices.js for vehicle modal
+function initializeVehicleModal() {
+    const selectElement = document.getElementById('selectVehicleModal');
+    if (selectElement && !vehicleChoice) {
+        vehicleChoice = new Choices(selectElement, {
+            searchEnabled: true,
+            itemSelectText: '',
+            searchResultLimit: 50,
+            renderChoiceLimit: 50,
+            noResultsText: 'Tidak ada kendaraan ditemukan',
+            noChoicesText: 'Masukkan kata kunci untuk mencari kendaraan'
+        });
+    }
+}
 
 // Open vehicle modal
 function openVehicleModal() {
+    initializeVehicleModal();
     const modal = new bootstrap.Modal(document.getElementById('vehicleModal'));
     modal.show();
 }
 
-// Search vehicles
-function searchVehicles() {
-    const searchTerm = document.getElementById('vehicleSearch').value.trim();
-    const resultsContainer = document.getElementById('vehicleResults');
-    
-    if (!searchTerm) {
-        resultsContainer.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-search fa-2x mb-2"></i>
-                <p>Masukkan kata kunci untuk mencari kendaraan</p>
-            </div>
-        `;
-        return;
+// Load vehicles on search
+function loadVehicles(searchTerm) {
+    if (searchTerm.length >= 2) {
+        fetch(`?ajax=search_vehicle&search=${encodeURIComponent(searchTerm)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.length > 0) {
+                    const choices = data.map(vehicle => ({
+                        value: vehicle.KodeKendaraan,
+                        label: vehicle.NamaKendaraan + (vehicle.NoPolisi ? ' - ' + vehicle.NoPolisi : ''),
+                        customProperties: vehicle
+                    }));
+                    vehicleChoice.clearChoices();
+                    vehicleChoice.setChoices(choices, 'value', 'label', true);
+                } else {
+                    vehicleChoice.clearChoices();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading vehicles:', error);
+                vehicleChoice.clearChoices();
+            });
     }
-    
-    resultsContainer.innerHTML = `
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2">Mencari kendaraan...</p>
-        </div>
-    `;
-    
-    fetch(`?ajax=search_vehicle&search=${encodeURIComponent(searchTerm)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.length > 0) {
-                let html = '<div class="list-group">';
-                data.forEach(vehicle => {
-                    html += `
-                        <div class="list-group-item list-group-item-action" onclick="selectVehicle('${vehicle.KodeKendaraan}', '${vehicle.NamaKendaraan}', '${vehicle.NoPolisi}', '${vehicle.NamaMerek || ''}', '${vehicle.NamaCustomer || ''}')">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">${vehicle.NamaKendaraan}</h6>
-                                <small>${vehicle.KodeKendaraan}</small>
-                            </div>
-                            <p class="mb-1">
-                                <i class="fas fa-car me-1"></i>
-                                ${vehicle.NoPolisi} | ${vehicle.NamaMerek || 'Merek tidak diketahui'}
-                            </p>
-                            <small>
-                                <i class="fas fa-user me-1"></i>
-                                ${vehicle.NamaCustomer || 'Customer tidak diketahui'}
-                            </small>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                resultsContainer.innerHTML = html;
-            } else {
-                resultsContainer.innerHTML = `
-                    <div class="text-center py-4 text-muted">
-                        <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
-                        <p>Tidak ada kendaraan ditemukan</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            resultsContainer.innerHTML = `
-                <div class="text-center py-4 text-danger">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                    <p>Terjadi kesalahan saat mencari kendaraan</p>
-                    <small class="text-muted">${error.message}</small>
-                </div>
-            `;
-        });
 }
 
-// Select vehicle
-function selectVehicle(code, name, noPolisi, merek, customer) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '?action=select_vehicle';
-    
-    const fields = {
-        'vehicle_code': code,
-        'vehicle_name': name,
-        'vehicle_no_polisi': noPolisi,
-        'vehicle_merek': merek,
-        'vehicle_customer': customer
-    };
-    
-    Object.keys(fields).forEach(key => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = fields[key];
-        form.appendChild(input);
-    });
-    
-    document.body.appendChild(form);
-    form.submit();
+// Select vehicle from modal
+function selectVehicleFromModal() {
+    const selectedValue = vehicleChoice.getValue().value;
+    if (selectedValue) {
+        // Get the selected choice data
+        const selectedChoice = vehicleChoice._currentState.choices.find(choice => choice.value === selectedValue);
+        const vehicleData = selectedChoice ? selectedChoice.customProperties : null;
+        
+        if (!vehicleData) {
+            console.error('Vehicle data not found');
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '?action=select_vehicle';
+        
+        const fields = {
+            'vehicle_code': vehicleData.KodeKendaraan,
+            'vehicle_name': vehicleData.NamaKendaraan,
+            'vehicle_no_polisi': vehicleData.NoPolisi,
+            'vehicle_merek': vehicleData.NamaMerek || '',
+            'vehicle_customer': vehicleData.NamaCustomer || ''
+        };
+        
+        Object.keys(fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
 }
 
 // Clear vehicle selection
@@ -546,11 +543,42 @@ document.addEventListener('DOMContentLoaded', function() {
         loadVehicleTransactions();
     }
     
-    // Handle search on Enter key
-    document.getElementById('vehicleSearch').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchVehicles();
+    // Initialize vehicle modal Choices.js
+    initializeVehicleModal();
+    
+    // Add event listener for vehicle search
+    document.getElementById('selectVehicleModal').addEventListener('search', function(e) {
+        const searchTerm = e.detail.value;
+        if (searchTerm.length >= 2) {
+            loadVehicles(searchTerm);
         }
+    });
+    
+    // Add event listener for vehicle selection
+    document.getElementById('selectVehicleModal').addEventListener('choice', function(e) {
+        const selectedChoice = e.detail.choice;
+        const selectedData = selectedChoice.customProperties;
+        if (selectedData) {
+            // Show vehicle info
+            document.getElementById('vehicleNoPolisiModal').textContent = selectedData.NoPolisi || '-';
+            document.getElementById('vehicleTipeModal').textContent = selectedData.NamaKendaraan || '-';
+            document.getElementById('vehicleTahunModal').textContent = selectedData.Tahun || '-';
+            document.getElementById('vehicleWarnaModal').textContent = selectedData.Warna || '-';
+            document.getElementById('vehicleInfoModal').style.display = 'block';
+        }
+    });
+    
+    // Add event listener for select button
+    document.getElementById('btnSelectVehicleModal').addEventListener('click', function() {
+        selectVehicleFromModal();
     });
 });
 </script>
+
+<style>
+.info-empesis {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+</style>

@@ -92,7 +92,7 @@ $title = 'Informasi Service';
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card-header">
-                        <h5 class="mb-0">
+                        <h5 class="mb-2">
                             <i class="fas fa-list me-2"></i>
                             Daftar Transaksi Service
                         </h5>
@@ -142,145 +142,138 @@ $title = 'Informasi Service';
                 <!-- Search Form -->
                 <div class="row mb-3">
                     <div class="col-12">
-                        <div class="input-group">
-                            <input type="text" 
-                                   id="customerSearch" 
-                                   class="form-control" 
-                                   placeholder="Cari nama customer, telepon, atau nomor polisi..."
-                                   autocomplete="off">
-                            <button class="btn btn-outline-primary" type="button" onclick="searchCustomers()">
-                                <i class="fas fa-search"></i>
-                            </button>
+                        <label class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select class="form-select" id="selectCustomerModal" name="KodeCustomer" required>
+                            <option value="">Pilih Customer...</option>
+                        </select>
+                        <div class="mb-2" style="margin-top: -15px;" id="customerInfoModal" style="display: none;">
+                            <div class="info-empesis p-2 rounded">
+                                <small class="text-muted">
+                                    <div>
+                                        <strong>Alamat:</strong>
+                                        <span id="customerAlamatModal">-</span>
+                                    </div>
+                                    <div>
+                                        <strong>Kota:</strong>
+                                        <span id="customerKotaModal">-</span>
+                                    </div>
+                                    <div>
+                                        <strong>Telepon:</strong>
+                                        <span id="customerTeleponModal">-</span>
+                                    </div>
+                                </small>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Search Results -->
-                <div id="customerResults">
-                    <div class="text-center py-4 text-muted">
-                        <i class="fas fa-search fa-2x mb-2"></i>
-                        <p>Masukkan kata kunci untuk mencari customer</p>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" id="btnSelectCustomerModal">Pilih Customer</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Choices.js CSS -->
+<link href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/css/choices.min.css" rel="stylesheet">
+
+<!-- Choices.js JS -->
+<script src="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/js/choices.min.js"></script>
+
 <script>
 let selectedCustomerCode = '<?php echo $selected_customer['code'] ?? ''; ?>';
+let customerChoice;
+
+// Initialize Choices.js for customer modal
+function initializeCustomerModal() {
+    const selectElement = document.getElementById('selectCustomerModal');
+    if (selectElement && !customerChoice) {
+        customerChoice = new Choices(selectElement, {
+            searchEnabled: true,
+            searchResultLimit: 50,
+            renderChoiceLimit: 50,
+            itemSelectText: '',
+            noResultsText: 'Tidak ada customer ditemukan',
+            noChoicesText: 'Masukkan kata kunci untuk mencari customer'
+        });
+    }
+}
 
 // Open customer modal
 function openCustomerModal() {
+    initializeCustomerModal();
     const modal = new bootstrap.Modal(document.getElementById('customerModal'));
     modal.show();
 }
 
-// Search customers
-function searchCustomers() {
-    const searchTerm = document.getElementById('customerSearch').value.trim();
-    const resultsContainer = document.getElementById('customerResults');
-    
-    if (!searchTerm) {
-        resultsContainer.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-search fa-2x mb-2"></i>
-                <p>Masukkan kata kunci untuk mencari customer</p>
-            </div>
-        `;
-        return;
+// Load customers on search
+function loadCustomers(searchTerm) {
+    if (searchTerm.length >= 2) {
+        fetch(`?ajax=search_customer&search=${encodeURIComponent(searchTerm)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.length > 0) {
+                    const choices = data.map(customer => ({
+                        value: customer.KodeCustomer,
+                        label: customer.NamaCustomer,
+                        customProperties: customer
+                    }));
+                    customerChoice.clearChoices();
+                    customerChoice.setChoices(choices, 'value', 'label', true);
+                } else {
+                    customerChoice.clearChoices();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading customers:', error);
+                customerChoice.clearChoices();
+            });
     }
-    
-    resultsContainer.innerHTML = `
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2">Mencari customer...</p>
-        </div>
-    `;
-    
-    fetch(`?ajax=search_customer&search=${encodeURIComponent(searchTerm)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.length > 0) {
-                let html = '<div class="list-group">';
-                data.forEach(customer => {
-                    html += `
-                        <div class="list-group-item list-group-item-action" onclick="selectCustomer('${customer.KodeCustomer}', '${customer.NamaCustomer}', '${customer.AlamatCustomer}', '${customer.Kota}', '${customer.NoTelepon}', '${customer.PIC}')">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">${customer.NamaCustomer}</h6>
-                                <small>${customer.KodeCustomer}</small>
-                            </div>
-                            <p class="mb-1">
-                                <i class="fas fa-map-marker-alt me-1"></i>
-                                ${customer.AlamatCustomer}, ${customer.Kota}
-                            </p>
-                            <small>
-                                <i class="fas fa-phone me-1"></i>
-                                ${customer.NoTelepon} | 
-                                <i class="fas fa-user me-1"></i>
-                                ${customer.PIC}
-                            </small>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                resultsContainer.innerHTML = html;
-            } else {
-                resultsContainer.innerHTML = `
-                    <div class="text-center py-4 text-muted">
-                        <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
-                        <p>Tidak ada customer ditemukan</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            resultsContainer.innerHTML = `
-                <div class="text-center py-4 text-danger">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                    <p>Terjadi kesalahan saat mencari customer</p>
-                    <small class="text-muted">${error.message}</small>
-                </div>
-            `;
-        });
 }
 
-// Select customer
-function selectCustomer(code, name, address, city, phone, pic) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '?action=select_customer';
-    
-    const fields = {
-        'customer_code': code,
-        'customer_name': name,
-        'customer_address': address,
-        'customer_city': city,
-        'customer_phone': phone,
-        'customer_pic': pic
-    };
-    
-    Object.keys(fields).forEach(key => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = fields[key];
-        form.appendChild(input);
-    });
-    
-    document.body.appendChild(form);
-    form.submit();
+// Select customer from modal
+function selectCustomerFromModal() {
+    const selectedValue = customerChoice.getValue().value;
+    if (selectedValue) {
+        // Get the selected choice data
+        const selectedChoice = customerChoice._currentState.choices.find(choice => choice.value === selectedValue);
+        const customerData = selectedChoice ? selectedChoice.customProperties : null;
+        
+        if (!customerData) {
+            console.error('Customer data not found');
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '?action=select_customer';
+        
+        const fields = {
+            'customer_code': customerData.KodeCustomer,
+            'customer_name': customerData.NamaCustomer,
+            'customer_address': customerData.AlamatCustomer,
+            'customer_city': customerData.Kota,
+            'customer_phone': customerData.NoTelepon,
+            'customer_pic': customerData.PIC
+        };
+        
+        Object.keys(fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
 }
 
 // Clear customer selection
@@ -554,11 +547,41 @@ document.addEventListener('DOMContentLoaded', function() {
         loadCustomerTransactions();
     }
     
-    // Handle search on Enter key
-    document.getElementById('customerSearch').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchCustomers();
+    // Initialize customer modal Choices.js
+    initializeCustomerModal();
+    
+    // Add event listener for customer search
+    document.getElementById('selectCustomerModal').addEventListener('search', function(e) {
+        const searchTerm = e.detail.value;
+        if (searchTerm.length >= 2) {
+            loadCustomers(searchTerm);
         }
+    });
+    
+    // Add event listener for customer selection
+    document.getElementById('selectCustomerModal').addEventListener('choice', function(e) {
+        const selectedChoice = e.detail.choice;
+        const selectedData = selectedChoice.customProperties;
+        if (selectedData) {
+            // Show customer info
+            document.getElementById('customerAlamatModal').textContent = selectedData.AlamatCustomer || '-';
+            document.getElementById('customerKotaModal').textContent = selectedData.Kota || '-';
+            document.getElementById('customerTeleponModal').textContent = selectedData.NoTelepon || '-';
+            document.getElementById('customerInfoModal').style.display = 'block';
+        }
+    });
+    
+    // Add event listener for select button
+    document.getElementById('btnSelectCustomerModal').addEventListener('click', function() {
+        selectCustomerFromModal();
     });
 });
 </script>
+
+<style>
+.info-empesis {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+</style>

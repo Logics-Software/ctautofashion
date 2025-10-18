@@ -90,7 +90,7 @@ if ($is_logged_in) {
                 <nav class="sidebar-nav">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/dashboard">
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/transaksi-work-order">
                             <i class="fa-solid fa-gauge  me-2"></i>Dashboard
                             </a>
                         </li>
@@ -98,8 +98,8 @@ if ($is_logged_in) {
                             <hr class="my-3">
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/profile">
-                                <i class="fas fa-list-check me-2"></i>Buat Work Order Baru
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/transaksi-work-order">
+                                <i class="fas fa-list-check me-2"></i>Buat Work Order
                             </a>
                         </li>
                         <li class="nav-item">

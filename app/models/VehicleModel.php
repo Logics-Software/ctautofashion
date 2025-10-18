@@ -16,9 +16,11 @@ class VehicleModel {
             $params = [];
             
             if (!empty($searchTerm)) {
-                $searchCondition = 'AND (K.NoPolisi LIKE ? OR K.NamaKendaraan LIKE ? OR M.NamaMerek LIKE ? OR C.NamaCustomer LIKE ?)';
+                $searchCondition = 'AND (REPLACE(K.NoPolisi, \' \', \'\') LIKE ? OR K.NamaKendaraan LIKE ? OR M.NamaMerek LIKE ? OR C.NamaCustomer LIKE ?)';
                 $searchParam = '%' . $searchTerm . '%';
-                $params = [$searchParam, $searchParam, $searchParam, $searchParam];
+                // Remove spaces from search term for NoPolisi matching
+                $searchParamNoSpace = '%' . str_replace(' ', '', $searchTerm) . '%';
+                $params = [$searchParamNoSpace, $searchParam, $searchParam, $searchParam];
             }
             
             $sql = "SELECT K.*, M.NamaMerek, C.NamaCustomer, C.KodeCustomer
