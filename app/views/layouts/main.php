@@ -37,7 +37,7 @@
     <script src="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/js/bootstrap.bundle.min.js"></script>
     
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/js/chart.umd.min.js"></script>
     
     <!-- Custom JS -->
     <script>
