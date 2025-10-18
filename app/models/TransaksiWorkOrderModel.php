@@ -235,6 +235,257 @@ class TransaksiWorkOrderModel {
     }
     
     /**
+     * Get default picker from TipeUser table based on UserID
+     * For TipeUser = 1, return KodePicker if exists
+     */
+    public function getDefaultPickerByUser($userID) {
+        try {
+            $sql = "SELECT tu.KodePicker, tu.TipeUser, fp.NamaPicker
+                    FROM TipeUser tu
+                    LEFT JOIN FilePicker fp ON tu.KodePicker = fp.KodePicker
+                    WHERE tu.UserID = ? AND tu.TipeUser = 1 AND tu.KodePicker IS NOT NULL AND tu.KodePicker != ''";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$userID]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && !empty($result['KodePicker'])) {
+                // Get full picker details
+                return $this->getPickerByCode($result['KodePicker']);
+            }
+            
+            return null;
+            
+        } catch (PDOException $e) {
+            error_log("Error getting default picker by user: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Get Kota List from TabelKota (only active cities)
+     */
+    public function getKotaList() {
+        try {
+            $sql = "SELECT Kota FROM TabelKota WHERE Status = 1 ORDER BY Kota";
+            $stmt = $this->pdo->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error getting kota list: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Generate new KodeCustomer (CSXXXXXX format)
+     */
+    public function generateKodeCustomer() {
+        try {
+            $sql = "SELECT TOP 1 KodeCustomer FROM FileCustomer 
+                    WHERE KodeCustomer LIKE 'CS%' 
+                    ORDER BY KodeCustomer DESC";
+            $stmt = $this->pdo->query($sql);
+            $lastCode = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($lastCode) {
+                // Extract number from CSXXXXXX
+                $lastNumber = intval(substr($lastCode['KodeCustomer'], 2));
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+            
+            // Format: CSXXXXXX (6 digits)
+            return 'CS' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+            
+        } catch (PDOException $e) {
+            error_log("Error generating KodeCustomer: " . $e->getMessage());
+            return 'CS000001';
+        }
+    }
+    
+    /**
+     * Save new customer (with transaction for FileCustomer and FileJenisCustomer)
+     */
+    public function saveNewCustomer($data) {
+        try {
+            // Start transaction
+            $this->pdo->beginTransaction();
+            
+            // Generate KodeCustomer
+            $kodeCustomer = $this->generateKodeCustomer();
+            
+            // Insert into FileCustomer (sesuai struktur table asli)
+            $sql = "INSERT INTO FileCustomer (
+                        KodeCustomer, NamaCustomer, AlamatCustomer, Kota, 
+                        NoTelepon, KontakPerson, 
+                        PKP, NPWP, NamaWP, AlamatWP, 
+                        KodeTransaksi, KodeTermin, KodeKendaraan, 
+                        SaldoPiutang, UserID, Status, NIK
+                    ) VALUES (
+                        ?, ?, ?, ?, 
+                        ?, ?, 
+                        0, '', '', '', 
+                        '', '', '', 
+                        0, ?, 1, ''
+                    )";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                $kodeCustomer,
+                $data['NamaCustomer'],
+                $data['AlamatCustomer'],
+                $data['Kota'],
+                $data['NoTelepon'],
+                $data['PIC'] ?? '',  // PIC dari form akan masuk ke KontakPerson
+                $_SESSION['user_id'] ?? 'SYSTEM'
+            ]);
+            
+            // Insert into FileJenisCustomer
+            $sqlJenis = "INSERT INTO FileJenisCustomer (KodeCustomer, JenisCustomer) VALUES (?, ?)";
+            $stmtJenis = $this->pdo->prepare($sqlJenis);
+            $stmtJenis->execute([
+                $kodeCustomer,
+                $data['JenisCustomer']
+            ]);
+            
+            // Commit transaction
+            $this->pdo->commit();
+            
+            return [
+                'success' => true,
+                'kodeCustomer' => $kodeCustomer,
+                'namaCustomer' => $data['NamaCustomer']
+            ];
+            
+        } catch (PDOException $e) {
+            // Rollback on error
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            error_log("Error saving new customer: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Get Merek List from TabelMerekKendaraan
+     */
+    public function getMerekList() {
+        try {
+            $sql = "SELECT KodeMerek, NamaMerek FROM TabelMerekKendaraan WHERE Status = 1 ORDER BY NamaMerek";
+            $stmt = $this->pdo->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error getting merek list: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get Model (Jenis) List from TabelJenisKendaraan
+     */
+    public function getModelList() {
+        try {
+            $sql = "SELECT KodeJenis, NamaJenis FROM TabelJenisKendaraan WHERE Status = 1 ORDER BY NamaJenis";
+            $stmt = $this->pdo->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error getting model list: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Generate new KodeKendaraan (KDRXXXXX format - 5 digit counter)
+     */
+    public function generateKodeKendaraan() {
+        try {
+            $sql = "SELECT TOP 1 KodeKendaraan FROM FileKendaraan 
+                    WHERE KodeKendaraan LIKE 'KDR%' 
+                    ORDER BY KodeKendaraan DESC";
+            $stmt = $this->pdo->query($sql);
+            $lastCode = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($lastCode) {
+                // Extract number from KDRXXXXX
+                $lastNumber = intval(substr($lastCode['KodeKendaraan'], 3));
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+            
+            // Format: KDRXXXXX (5 digits)
+            return 'KDR' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+            
+        } catch (PDOException $e) {
+            error_log("Error generating KodeKendaraan: " . $e->getMessage());
+            return 'KDR00001';
+        }
+    }
+    
+    /**
+     * Save new vehicle to FileKendaraan
+     */
+    public function saveNewVehicle($data) {
+        try {
+            // Start transaction
+            $this->pdo->beginTransaction();
+            
+            // Generate KodeKendaraan
+            $kodeKendaraan = $this->generateKodeKendaraan();
+            
+            // Insert into FileKendaraan
+            $sql = "INSERT INTO FileKendaraan (
+                        KodeKendaraan, NamaKendaraan, KodeJenis, KodeMerek, 
+                        Tipe, Warna, Tahun, Silinder, BahanBakar, 
+                        KodeCustomer, NoPolisi, Status
+                    ) VALUES (
+                        ?, ?, ?, ?, 
+                        ?, ?, ?, ?, ?, 
+                        NULL, ?, 1
+                    )";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                $kodeKendaraan,
+                $data['NamaKendaraan'],
+                $data['KodeJenis'],
+                $data['KodeMerek'],
+                $data['Tipe'],
+                $data['Warna'],
+                $data['Tahun'],
+                $data['Silinder'],
+                $data['BahanBakar'],
+                strtoupper($data['NoPolisi'])  // Convert to uppercase
+            ]);
+            
+            // Commit transaction
+            $this->pdo->commit();
+            
+            // Get full vehicle data
+            $vehicleData = $this->getVehicleByCode($kodeKendaraan);
+            
+            return [
+                'success' => true,
+                'kodeKendaraan' => $kodeKendaraan,
+                'namaKendaraan' => $data['NamaKendaraan'],
+                'noPolisi' => strtoupper($data['NoPolisi']),
+                'vehicleData' => $vehicleData
+            ];
+            
+        } catch (PDOException $e) {
+            // Rollback on error
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            error_log("Error saving new vehicle: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
      * Search jasa by KodeJasa, NamaJasa, KodeKategori, or NamaKategori
      */
     public function searchJasa($searchTerm = '') {
@@ -344,6 +595,29 @@ class TransaksiWorkOrderModel {
         } catch (PDOException $e) {
             error_log("Error getting barang: " . $e->getMessage());
             return null;
+        }
+    }
+    
+    /**
+     * Get stock available for barang (StokAkhir - reserved in StokOrder)
+     */
+    public function getStokBarang($kodeBarang) {
+        try {
+            $sql = "SELECT S.StokAkhir - ISNULL((SELECT SUM(O.Jumlah) FROM StokOrder O WHERE O.KodeBarang = S.KodeBarang),0) AS StokAkhir
+                    FROM StokBarang S
+                    WHERE S.KodeBarang = ?";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$kodeBarang]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Return stock as integer, default to 0 if not found
+            return $result ? (int)$result['StokAkhir'] : 0;
+            
+        } catch (PDOException $e) {
+            error_log("Error getting stok barang: " . $e->getMessage());
+            return 0;
         }
     }
     

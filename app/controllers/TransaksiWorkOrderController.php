@@ -43,14 +43,16 @@ class TransaksiWorkOrderController {
             $userID = $_SESSION['user_id'] ?? null;
             $tipeUser = isset($_SESSION['tipe_user']) ? (int)$_SESSION['tipe_user'] : null;
             
-            // Debug logging
-            error_log("TransaksiWorkOrder Index - UserID: " . ($userID ?? 'null') . ", TipeUser: " . ($tipeUser ?? 'null'));
-            error_log("Session data: " . print_r($_SESSION, true));
-            
             // Get work orders
             $workOrders = $this->model->getWorkOrders($filters, $limit, $offset, $userID, $tipeUser);
             $totalWorkOrders = $this->model->getTotalWorkOrders($filters, $userID, $tipeUser);
             $totalPages = ceil($totalWorkOrders / $limit);
+            
+            // Get default picker if TipeUser = 1
+            $defaultPicker = null;
+            if ($tipeUser === 1 && $userID) {
+                $defaultPicker = $this->model->getDefaultPickerByUser($userID);
+            }
             
             // Prepare data for view
             $data = [
@@ -58,7 +60,8 @@ class TransaksiWorkOrderController {
                 'filters' => $filters,
                 'page' => $page,
                 'totalPages' => $totalPages,
-                'totalWorkOrders' => $totalWorkOrders
+                'totalWorkOrders' => $totalWorkOrders,
+                'defaultPicker' => $defaultPicker  // Pass default picker to view
             ];
             
             $this->renderView('transaksiworkorder/index', $data);
@@ -255,6 +258,42 @@ class TransaksiWorkOrderController {
         } catch (Exception $e) {
             error_log("Error getting barang: " . $e->getMessage());
             echo json_encode([]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Get stock available for barang
+     */
+    public function getStokBarang() {
+        header('Content-Type: application/json');
+        
+        try {
+            $kodeBarang = $_GET['code'] ?? '';
+            
+            if (empty($kodeBarang)) {
+                echo json_encode([
+                    'success' => false,
+                    'stok' => 0,
+                    'message' => 'Kode barang tidak boleh kosong'
+                ]);
+                exit();
+            }
+            
+            $stok = $this->model->getStokBarang($kodeBarang);
+            
+            echo json_encode([
+                'success' => true,
+                'stok' => $stok
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error getting stok barang: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'stok' => 0,
+                'message' => 'Terjadi kesalahan saat mengambil data stok'
+            ]);
         }
         exit();
     }
@@ -598,6 +637,150 @@ class TransaksiWorkOrderController {
             echo json_encode([
                 'success' => false,
                 'error' => 'Terjadi kesalahan saat mengupdate work order'
+            ]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Get Kota List
+     */
+    public function getKotaList() {
+        header('Content-Type: application/json');
+        
+        try {
+            $kotaList = $this->model->getKotaList();
+            
+            echo json_encode([
+                'success' => true,
+                'kota' => $kotaList
+            ]);
+        } catch (Exception $e) {
+            error_log("Error getting kota list: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Gagal mengambil data kota'
+            ]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Save New Customer
+     */
+    public function saveCustomer() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Get JSON input
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+            
+            // Validate required fields
+            if (empty($data['NamaCustomer']) || empty($data['Kota']) || 
+                empty($data['NoTelepon']) || !isset($data['JenisCustomer'])) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Data tidak lengkap'
+                ]);
+                exit();
+            }
+            
+            // Save customer
+            $result = $this->model->saveNewCustomer($data);
+            
+            echo json_encode($result);
+            
+        } catch (Exception $e) {
+            error_log("Error saving customer: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan customer'
+            ]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Get Merek List
+     */
+    public function getMerekList() {
+        header('Content-Type: application/json');
+        
+        try {
+            $merekList = $this->model->getMerekList();
+            
+            echo json_encode([
+                'success' => true,
+                'merek' => $merekList
+            ]);
+        } catch (Exception $e) {
+            error_log("Error getting merek list: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Gagal mengambil data merek'
+            ]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Get Model (Jenis) List
+     */
+    public function getModelList() {
+        header('Content-Type: application/json');
+        
+        try {
+            $modelList = $this->model->getModelList();
+            
+            echo json_encode([
+                'success' => true,
+                'model' => $modelList
+            ]);
+        } catch (Exception $e) {
+            error_log("Error getting model list: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Gagal mengambil data model'
+            ]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Save New Vehicle
+     */
+    public function saveVehicle() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Get JSON input
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+            
+            // Validate required fields
+            if (empty($data['KodeMerek']) || empty($data['KodeJenis']) || 
+                empty($data['Tipe']) || empty($data['Warna']) || 
+                empty($data['Tahun']) || empty($data['Silinder']) ||
+                empty($data['BahanBakar']) || empty($data['NamaKendaraan']) ||
+                empty($data['NoPolisi'])) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Data tidak lengkap'
+                ]);
+                exit();
+            }
+            
+            // Save vehicle
+            $result = $this->model->saveNewVehicle($data);
+            
+            echo json_encode($result);
+            
+        } catch (Exception $e) {
+            error_log("Error saving vehicle: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan kendaraan'
             ]);
         }
         exit();

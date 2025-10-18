@@ -146,6 +146,7 @@ $router->addRoute('GET', '/transaksi-work-order/search-jasa', 'TransaksiWorkOrde
 $router->addRoute('GET', '/transaksi-work-order/get-jasa', 'TransaksiWorkOrderController', 'getJasa');
 $router->addRoute('GET', '/transaksi-work-order/search-barang', 'TransaksiWorkOrderController', 'searchBarang');
 $router->addRoute('GET', '/transaksi-work-order/get-barang', 'TransaksiWorkOrderController', 'getBarang');
+$router->addRoute('GET', '/transaksi-work-order/get-stok-barang', 'TransaksiWorkOrderController', 'getStokBarang');
 $router->addRoute('GET', '/transaksi-work-order/search-montir', 'TransaksiWorkOrderController', 'searchMontir');
 $router->addRoute('GET', '/transaksi-work-order/get-montir', 'TransaksiWorkOrderController', 'getMontir');
 $router->addRoute('GET', '/transaksi-work-order/search-picker', 'TransaksiWorkOrderController', 'searchPicker');
@@ -154,6 +155,11 @@ $router->addRoute('GET', '/transaksi-work-order/get-detail', 'TransaksiWorkOrder
 $router->addRoute('GET', '/transaksi-work-order/get-data-for-edit', 'TransaksiWorkOrderController', 'getDataForEdit');
 $router->addRoute('POST', '/transaksi-work-order/save', 'TransaksiWorkOrderController', 'save');
 $router->addRoute('POST', '/transaksi-work-order/update', 'TransaksiWorkOrderController', 'update');
+$router->addRoute('GET', '/transaksi-work-order/get-kota-list', 'TransaksiWorkOrderController', 'getKotaList');
+$router->addRoute('POST', '/transaksi-work-order/save-customer', 'TransaksiWorkOrderController', 'saveCustomer');
+$router->addRoute('GET', '/transaksi-work-order/get-merek-list', 'TransaksiWorkOrderController', 'getMerekList');
+$router->addRoute('GET', '/transaksi-work-order/get-model-list', 'TransaksiWorkOrderController', 'getModelList');
+$router->addRoute('POST', '/transaksi-work-order/save-vehicle', 'TransaksiWorkOrderController', 'saveVehicle');
 
 // Dispatch the request
 $router->dispatch();

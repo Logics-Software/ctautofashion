@@ -15,6 +15,9 @@
 
                 <!-- Form Section (Initially Hidden) -->
                 <div id="formSection" style="display: none;">
+                    <h4 class="mb-3">
+                        <i class="fa-solid fa-plus-circle me-2"></i>Buat Work Order Baru
+                    </h4>
                     <form id="formWorkOrder">
                         <!-- Header Section -->
                         <div class="mb-3">
@@ -24,10 +27,17 @@
                                     <label class="form-label">
                                         Customer <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select" id="selectCustomer" name="KodeCustomer">
-                                        <option value="">Pilih Customer...</option>
-                                    </select>
-                                    <div class="mb-2" style="margin-top: -15px;" id="customerInfo" style="display: none;">
+                                    <div class="d-flex gap-2">
+                                        <div class="flex-grow-1">
+                                            <select class="form-select" id="selectCustomer" name="KodeCustomer">
+                                                <option value="">Pilih Customer...</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-primary btn-icon-add" id="btnAddCustomer" title="Tambah Customer Baru">
+                                            <i class="fa-solid fa-plus fa-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="mb-2 mt-1" id="customerInfo" style="display: none;">
                                         <div class="info-empesis p-2 rounded">
                                             <small class="text-muted">
                                                 <div>
@@ -52,10 +62,17 @@
                                     <label class="form-label">
                                         Kendaraan <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select" id="selectKendaraan" name="KodeKendaraan">
-                                        <option value="">Pilih Kendaraan...</option>
-                                    </select>
-                                    <div class="mb-2" style="margin-top: -15px;" id="kendaraanInfo" style="display: none;">
+                                    <div class="d-flex gap-2">
+                                        <div class="flex-grow-1">
+                                            <select class="form-select" id="selectKendaraan" name="KodeKendaraan">
+                                                <option value="">Pilih Kendaraan...</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-primary btn-icon-add" id="btnAddKendaraan" title="Tambah Kendaraan Baru">
+                                            <i class="fa-solid fa-plus fa-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="mb-2 mt-1" id="kendaraanInfo" style="display: none;">
                                         <div class="info-empesis p-2 rounded">
                                             <small class="text-muted">
                                                 <div>
@@ -212,15 +229,15 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         <button type="button" class="btn btn-secondary" id="btnCancel">
                                             <i class="fas fa-times me-1"></i>Batal
                                         </button>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="d-flex justify-content-end align-items-center mb-2">
                                             <h5 class="mb-0 me-3">GRAND TOTAL:</h5>
-                                            <h4 class="mb-0 text-primary fw-bold" id="grandTotal">Rp 0</h4>
+                                            <h5 class="mb-0 text-primary fw-bold" id="grandTotal">Rp 0</h5>
                                         </div>
                                         <button type="submit" class="btn btn-primary w-100" id="btnSave">
                                             <i class="fas fa-save me-1"></i>Simpan Work Order
@@ -281,7 +298,7 @@
                                     <th>Customer</th>
                                     <th>Kendaraan</th>
                                     <th>Mek./Mark.</th>
-                                    <th>Total Order</th>
+                                    <th>Total</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -633,6 +650,146 @@
     </div>
 </div>
 
+<!-- Modal Add New Customer -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-user-plus me-2"></i>Tambah Customer Baru
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formAddCustomer">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Customer <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newCustomerNama" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jenis Customer <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newCustomerJenis" required>
+                                <option value="">Pilih Jenis...</option>
+                                <option value="0">Perorangan</option>
+                                <option value="1">Perusahaan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Alamat <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="newCustomerAlamat" rows="2" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kota <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newCustomerKota" required>
+                                <option value="">Pilih Kota...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">No Telepon <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newCustomerTelepon" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">PIC (Person In Charge)</label>
+                        <input type="text" class="form-control" id="newCustomerPIC">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-times me-2"></i>Batal
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSaveNewCustomer">
+                    <i class="fa-solid fa-save me-2"></i>Simpan Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add New Kendaraan -->
+<div class="modal fade" id="addKendaraanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-car me-2"></i>Tambah Kendaraan Baru
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formAddKendaraan">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Merek <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newKendaraanMerek" required>
+                                <option value="">Pilih Merek...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Model (Jenis) <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newKendaraanModel" required>
+                                <option value="">Pilih Model...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipe <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newKendaraanTipe" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Warna <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newKendaraanWarna" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tahun <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="newKendaraanTahun" min="1900" max="2100" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Silinder <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="newKendaraanSilinder" min="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Bahan Bakar <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newKendaraanBahanBakar" required>
+                                <option value="">Pilih...</option>
+                                <option value="Bensin">Bensin</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Listrik">Listrik</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nama Kendaraan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="newKendaraanNama" required>
+                        <small class="text-muted">Otomatis terisi, tetapi bisa diedit</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">No Polisi <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="newKendaraanNoPolisi" required style="text-transform: uppercase;">
+                        <small class="text-muted">Format: B1234XYZ</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-times me-2"></i>Batal
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSaveNewKendaraan">
+                    <i class="fa-solid fa-save me-2"></i>Simpan Kendaraan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Include Choices.js CSS -->
 <link href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/assets/css/choices.min.css" rel="stylesheet" />
 
@@ -729,6 +886,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 50);
     });
 
+    // Initialize Choices.js for Picker
     pickerChoice = new Choices('#selectPicker', {
         searchEnabled: true,
         searchPlaceholderValue: 'Ketik untuk mencari...',
@@ -861,28 +1019,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load montir function
     function loadMontir(searchTerm) {
-        console.log('Loading montir with term:', searchTerm);
         fetch(`${basePath}/transaksi-work-order/search-montir?term=${encodeURIComponent(searchTerm)}`)
             .then(response => response.json())
             .then(data => {
-                console.log('Montir API response:', data);
                 if (data.results && data.results.length > 0) {
                     const choices = data.results.map(item => ({
                         value: item.id,
                         label: item.text,
                         customProperties: item.data
                     }));
-                    console.log('Montir choices to set:', choices);
 
                     // Clear existing choices first
                     montirChoice.clearChoices();
 
                     // Set new choices
                     montirChoice.setChoices(choices, 'value', 'label', true);
-
-                    console.log('Montir choices set, total:', montirChoice._currentState.choices.length);
                 } else {
-                    console.log('No montir results found');
                     montirChoice.clearChoices();
                 }
             })
@@ -890,29 +1042,76 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Load picker function
+    // Load Kota List for Add Customer Modal from TabelKota (Status = 1)
+    function loadKotaList() {
+        fetch(`${basePath}/transaksi-work-order/get-kota-list`)
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('newCustomerKota');
+                select.innerHTML = '<option value="">Pilih Kota...</option>';
+                
+                if (data.success && data.kota && data.kota.length > 0) {
+                    data.kota.forEach(kota => {
+                        // Use Kota field for both value and display
+                        const option = new Option(kota.Kota, kota.Kota);
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading kota:', error));
+    }
+    
+    function loadMerekList() {
+        fetch(`${basePath}/transaksi-work-order/get-merek-list`)
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('newKendaraanMerek');
+                select.innerHTML = '<option value="">Pilih Merek...</option>';
+                
+                if (data.success && data.merek && data.merek.length > 0) {
+                    data.merek.forEach(merek => {
+                        const option = new Option(merek.NamaMerek, merek.KodeMerek);
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading merek:', error));
+    }
+    
+    function loadModelList() {
+        fetch(`${basePath}/transaksi-work-order/get-model-list`)
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('newKendaraanModel');
+                select.innerHTML = '<option value="">Pilih Model...</option>';
+                
+                if (data.success && data.model && data.model.length > 0) {
+                    data.model.forEach(model => {
+                        const option = new Option(model.NamaJenis, model.KodeJenis);
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading model:', error));
+    }
+    
     function loadPicker(searchTerm) {
-        console.log('Loading picker with term:', searchTerm);
         fetch(`${basePath}/transaksi-work-order/search-picker?term=${encodeURIComponent(searchTerm)}`)
             .then(response => response.json())
             .then(data => {
-                console.log('Picker API response:', data);
                 if (data.results && data.results.length > 0) {
                     const choices = data.results.map(item => ({
                         value: item.id,
                         label: item.text,
                         customProperties: item.data
                     }));
-                    console.log('Picker choices to set:', choices);
 
                     // Clear existing choices first
                     pickerChoice.clearChoices();
 
                     // Set new choices
                     pickerChoice.setChoices(choices, 'value', 'label', true);
-
-                    console.log('Picker choices set, total:', pickerChoice._currentState.choices.length);
                 } else {
-                    console.log('No picker results found');
                     pickerChoice.clearChoices();
                 }
             })
@@ -924,6 +1123,255 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('formSection').style.display = 'block';
         document.getElementById('listSection').style.display = 'none';
         resetForm();
+        
+        // Auto-fill default picker if TipeUser = 1
+        <?php if (isset($defaultPicker) && $defaultPicker): ?>
+        setTimeout(function() {
+            const defaultPickerData = {
+                KodePicker: '<?php echo htmlspecialchars($defaultPicker['KodePicker']); ?>',
+                NamaPicker: '<?php echo htmlspecialchars($defaultPicker['NamaPicker']); ?>',
+                AlamatPicker: '<?php echo htmlspecialchars($defaultPicker['AlamatPicker'] ?? ''); ?>',
+                NoTelepon: '<?php echo htmlspecialchars($defaultPicker['NoTelepon'] ?? ''); ?>'
+            };
+            
+            pickerChoice.clearStore();
+            pickerChoice.setChoices([{
+                value: defaultPickerData.KodePicker,
+                label: defaultPickerData.NamaPicker,
+                selected: true,
+                customProperties: defaultPickerData
+            }], 'value', 'label', true);
+        }, 100);
+        <?php endif; ?>
+    });
+    
+    // Button Tambah Customer Baru
+    document.getElementById('btnAddCustomer').addEventListener('click', function() {
+        // Load kota list
+        loadKotaList();
+        
+        // Reset form
+        document.getElementById('formAddCustomer').reset();
+        
+        // Show modal
+        const addCustomerModal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+        addCustomerModal.show();
+    });
+    
+    // Save New Customer
+    document.getElementById('btnSaveNewCustomer').addEventListener('click', function() {
+        const form = document.getElementById('formAddCustomer');
+        
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        // Get form data
+        const customerData = {
+            NamaCustomer: document.getElementById('newCustomerNama').value.trim(),
+            AlamatCustomer: document.getElementById('newCustomerAlamat').value.trim(),
+            Kota: document.getElementById('newCustomerKota').value,
+            NoTelepon: document.getElementById('newCustomerTelepon').value.trim(),
+            JenisCustomer: parseInt(document.getElementById('newCustomerJenis').value),
+            PIC: document.getElementById('newCustomerPIC').value.trim()
+        };
+        
+        // Validate
+        if (!customerData.NamaCustomer || !customerData.Kota || !customerData.NoTelepon || customerData.JenisCustomer === '') {
+            showAlert('Semua field yang bertanda (*) wajib diisi!', 'warning');
+            return;
+        }
+        
+        // Disable button
+        const btnSave = document.getElementById('btnSaveNewCustomer');
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Menyimpan...';
+        
+        // Send AJAX request
+        fetch(basePath + '/transaksi-work-order/save-customer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(customerData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close add customer modal
+                bootstrap.Modal.getInstance(document.getElementById('addCustomerModal')).hide();
+                
+                // Auto-select the new customer in dropdown
+                customerChoice.setChoices([{
+                    value: data.kodeCustomer,
+                    label: data.namaCustomer,
+                    selected: true,
+                    customProperties: {
+                        KodeCustomer: data.kodeCustomer,
+                        NamaCustomer: data.namaCustomer,
+                        AlamatCustomer: customerData.AlamatCustomer,
+                        Kota: customerData.Kota,
+                        NoTelepon: customerData.NoTelepon
+                    }
+                }], 'value', 'label', false);
+                
+                // Trigger change event to show customer info
+                document.getElementById('selectCustomer').dispatchEvent(new Event('change'));
+                
+                // Show success message
+                showSuccessModal('Customer baru berhasil ditambahkan!', 'Kode Customer: ' + data.kodeCustomer);
+                
+                // Auto-close success modal after 2 seconds
+                setTimeout(() => {
+                    const successModal = bootstrap.Modal.getInstance(document.getElementById('successModal'));
+                    if (successModal) {
+                        successModal.hide();
+                    }
+                }, 2000);
+            } else {
+                showAlert(data.message || 'Gagal menyimpan customer', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Terjadi kesalahan saat menyimpan customer', 'error');
+        })
+        .finally(() => {
+            // Re-enable button
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="fa-solid fa-save me-2"></i>Simpan Customer';
+        });
+    });
+    
+    // Button Tambah Kendaraan Baru
+    document.getElementById('btnAddKendaraan').addEventListener('click', function() {
+        // Load merek and model list
+        loadMerekList();
+        loadModelList();
+        
+        // Reset form
+        document.getElementById('formAddKendaraan').reset();
+        
+        // Show modal
+        const addKendaraanModal = new bootstrap.Modal(document.getElementById('addKendaraanModal'));
+        addKendaraanModal.show();
+    });
+    
+    // Auto-generate vehicle name when inputs change
+    ['newKendaraanMerek', 'newKendaraanModel', 'newKendaraanTipe', 'newKendaraanWarna', 'newKendaraanTahun', 'newKendaraanSilinder'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('change', generateVehicleName);
+            element.addEventListener('input', generateVehicleName);
+        }
+    });
+    
+    // Function to generate vehicle name
+    function generateVehicleName() {
+        const merekSelect = document.getElementById('newKendaraanMerek');
+        const modelSelect = document.getElementById('newKendaraanModel');
+        const tipe = document.getElementById('newKendaraanTipe').value.trim();
+        const warna = document.getElementById('newKendaraanWarna').value.trim();
+        const tahun = document.getElementById('newKendaraanTahun').value.trim();
+        const silinder = document.getElementById('newKendaraanSilinder').value.trim();
+        
+        // Get text from select options
+        const merek = merekSelect.options[merekSelect.selectedIndex]?.text || '';
+        const model = modelSelect.options[modelSelect.selectedIndex]?.text || '';
+        
+        // Build vehicle name
+        const parts = [merek, model, tipe, warna, tahun, silinder].filter(part => part);
+        const vehicleName = parts.join(' ');
+        
+        document.getElementById('newKendaraanNama').value = vehicleName;
+    }
+    
+    // Save New Vehicle
+    document.getElementById('btnSaveNewKendaraan').addEventListener('click', function() {
+        const form = document.getElementById('formAddKendaraan');
+        
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        // Get form data
+        const vehicleData = {
+            KodeMerek: document.getElementById('newKendaraanMerek').value,
+            KodeJenis: document.getElementById('newKendaraanModel').value,
+            Tipe: document.getElementById('newKendaraanTipe').value.trim(),
+            Warna: document.getElementById('newKendaraanWarna').value.trim(),
+            Tahun: parseInt(document.getElementById('newKendaraanTahun').value),
+            Silinder: parseInt(document.getElementById('newKendaraanSilinder').value),
+            BahanBakar: document.getElementById('newKendaraanBahanBakar').value,
+            NamaKendaraan: document.getElementById('newKendaraanNama').value.trim(),
+            NoPolisi: document.getElementById('newKendaraanNoPolisi').value.trim()
+        };
+        
+        // Validate
+        if (!vehicleData.KodeMerek || !vehicleData.KodeJenis || !vehicleData.Tipe || 
+            !vehicleData.Warna || !vehicleData.Tahun || !vehicleData.Silinder || 
+            !vehicleData.BahanBakar || !vehicleData.NamaKendaraan || !vehicleData.NoPolisi) {
+            showAlert('Semua field yang bertanda (*) wajib diisi!', 'warning');
+            return;
+        }
+        
+        // Disable button
+        const btnSave = document.getElementById('btnSaveNewKendaraan');
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Menyimpan...';
+        
+        // Send AJAX request
+        fetch(basePath + '/transaksi-work-order/save-vehicle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(vehicleData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close add vehicle modal
+                bootstrap.Modal.getInstance(document.getElementById('addKendaraanModal')).hide();
+                
+                // Auto-select the new vehicle in dropdown
+                kendaraanChoice.setChoices([{
+                    value: data.kodeKendaraan,
+                    label: data.namaKendaraan + ' - ' + data.noPolisi,
+                    selected: true,
+                    customProperties: data.vehicleData
+                }], 'value', 'label', false);
+                
+                // Trigger change event to show vehicle info
+                document.getElementById('selectKendaraan').dispatchEvent(new Event('change'));
+                
+                // Show success message
+                showSuccessModal('Kendaraan baru berhasil ditambahkan!', 'Kode Kendaraan: ' + data.kodeKendaraan);
+                
+                // Auto-close success modal after 2 seconds
+                setTimeout(() => {
+                    const successModal = bootstrap.Modal.getInstance(document.getElementById('successModal'));
+                    if (successModal) {
+                        successModal.hide();
+                    }
+                }, 2000);
+            } else {
+                showAlert(data.message || 'Gagal menyimpan kendaraan', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Terjadi kesalahan saat menyimpan kendaraan', 'error');
+        })
+        .finally(() => {
+            // Re-enable button
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="fa-solid fa-save me-2"></i>Simpan Kendaraan';
+        });
     });
     
     document.getElementById('btnCancel').addEventListener('click', function() {
@@ -1165,21 +1613,31 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Stok Tersedia</label>
+                                        <input type="text" class="form-control fw-bold" id="barangStok" readonly style="background-color: #f8f9fa;">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Jumlah</label>
                                         <input type="number" class="form-control" id="barangJumlah" value="1" min="0" step="0.01">
                                     </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div id="barangStokAlert" class="alert alert-warning py-2 mt-2 mb-0" style="display: none;">
+                                            <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                                            <small id="barangStokAlertText"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Harga Satuan</label>
                                         <input type="number" class="form-control" id="barangHarga" value="0" min="0">
                                     </div>
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Discount (%)</label>
                                         <input type="number" class="form-control" id="barangDiscount" value="0" min="0" max="100" step="0.01">
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
+                                    <div class="col-md-5">
                                         <label class="form-label">Total Harga</label>
                                         <input type="text" class="form-control fw-bold" id="barangTotalHarga" readonly>
                                     </div>
@@ -1212,7 +1670,15 @@ document.addEventListener('DOMContentLoaded', function() {
             renderChoiceLimit: 50
         });
         
-        let currentBarangData = null;
+        // Use window object untuk scope global agar bisa diakses dari event delegation
+          window.currentBarangData = null;
+          window.currentStokBarang = 0;
+          
+          // Reset dan sembunyikan alert saat modal dibuka
+          const elBarangDetailForm = document.getElementById('barangDetailForm');
+          const elBarangStokAlert = document.getElementById('barangStokAlert');
+          if (elBarangDetailForm) elBarangDetailForm.style.display = 'none';
+          if (elBarangStokAlert) elBarangStokAlert.style.display = 'none';
         
         document.getElementById('selectBarangModal').addEventListener('search', function(e) {
             const searchTerm = e.detail.value;
@@ -1236,55 +1702,246 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('selectBarangModal').addEventListener('change', function(e) {
             const value = e.target.value;
             if (value) {
+                  // Fetch barang data
                 fetch(`${basePath}/transaksi-work-order/get-barang?code=${encodeURIComponent(value)}`)
                     .then(response => response.json())
                     .then(barang => {
                         if (barang && barang.KodeBarang) {
-                            currentBarangData = barang;
-                            document.getElementById('barangNama').value = barang.NamaBarang || '';
-                            document.getElementById('barangSatuan').value = barang.Satuan || '';
-                            document.getElementById('barangMerek').value = barang.NamaMerek || '-';
-                            document.getElementById('barangJenis').value = barang.NamaJenis || '-';
-                            document.getElementById('barangHarga').value = Math.round(barang.HargaJual || 0);
-                            document.getElementById('barangDiscount').value = barang.DiscountJual || 0;
-                            document.getElementById('barangDetailForm').style.display = 'block';
+                             // Fetch stock data
+                             fetch(`${basePath}/transaksi-work-order/get-stok-barang?code=${encodeURIComponent(value)}`)
+                                 .then(response => response.json())
+                                .then(stokData => {
+                                     window.currentStokBarang = stokData.stok || 0;
+                                     
+                                     // Show barang info first
+                                     window.currentBarangData = barang;
+                                     const elBarangNama = document.getElementById('barangNama');
+                                     const elBarangSatuan = document.getElementById('barangSatuan');
+                                     const elBarangMerek = document.getElementById('barangMerek');
+                                     const elBarangJenis = document.getElementById('barangJenis');
+                                     const elBarangHarga = document.getElementById('barangHarga');
+                                     const elBarangDiscount = document.getElementById('barangDiscount');
+                                     const elBarangStok = document.getElementById('barangStok');
+                                     const elBarangJumlah = document.getElementById('barangJumlah');
+                                     const elBarangDetailForm = document.getElementById('barangDetailForm');
+                                     const elBarangStokAlert = document.getElementById('barangStokAlert');
+                                     const elBarangStokAlertText = document.getElementById('barangStokAlertText');
+                                     const elBtnSaveBarang = document.getElementById('btnSaveBarang');
+                                     
+                                     // Fill barang info
+                                     if (elBarangNama) elBarangNama.value = barang.NamaBarang || '';
+                                     if (elBarangSatuan) elBarangSatuan.value = barang.Satuan || '';
+                                     if (elBarangMerek) elBarangMerek.value = barang.NamaMerek || '-';
+                                     if (elBarangJenis) elBarangJenis.value = barang.NamaJenis || '-';
+                                     if (elBarangHarga) elBarangHarga.value = Math.round(barang.HargaJual || 0);
+                                     if (elBarangDiscount) elBarangDiscount.value = barang.DiscountJual || 0;
+                                     
+                                     // Display stock info
+                                     if (elBarangStok) {
+                                         elBarangStok.value = window.currentStokBarang;
+                                         if (window.currentStokBarang <= 0) {
+                                             elBarangStok.style.color = 'red';
+                                         } else if (window.currentStokBarang < 10) {
+                                             elBarangStok.style.color = 'orange';
+                                         } else {
+                                             elBarangStok.style.color = 'green';
+                                         }
+                                     }
+                                     
+                                     // Enable/disable form based on stock
+                                     if (window.currentStokBarang <= 0) {
+                                         // Disable form when no stock
+                                         if (elBarangJumlah) elBarangJumlah.disabled = true;
+                                         if (elBtnSaveBarang) elBtnSaveBarang.disabled = true;
+                                     } else {
+                                         // Enable form when stock available
+                                         if (elBarangJumlah) {
+                                             elBarangJumlah.disabled = false;
+                                             elBarangJumlah.max = window.currentStokBarang;
+                                         }
+                                         if (elBtnSaveBarang) elBtnSaveBarang.disabled = false;
+                                     }
+                                     
+                                     // Show form
+                                     if (elBarangDetailForm) elBarangDetailForm.style.display = 'block';
+                                     
+                                     // Setup event listeners untuk jumlah, harga, discount
+                                     setupBarangEventListeners();
+                                     
+                                     // Calculate total
                             calculateBarangTotal();
+                                     
+                                     // Validate stock after all elements are ready
+                                     setTimeout(function() {
+                                         validateBarangStock();
+                                     }, 50);
+                                 })
+                                 .catch(error => {
+                                     console.error('Error fetching stock:', error);
+                                     const elBarangStokAlert = document.getElementById('barangStokAlert');
+                                     const elBarangStokAlertText = document.getElementById('barangStokAlertText');
+                                     if (elBarangStokAlert && elBarangStokAlertText) {
+                                         elBarangStokAlert.className = 'alert alert-danger py-2 mt-2 mb-0';
+                                         elBarangStokAlertText.textContent = 'Gagal mengambil data stok barang';
+                                         elBarangStokAlert.style.display = 'block';
+                                     }
+                                 });
                         }
                     })
                     .catch(error => console.error('Error:', error));
             }
         });
         
-        ['barangJumlah', 'barangHarga', 'barangDiscount'].forEach(id => {
-            document.getElementById(id).addEventListener('input', calculateBarangTotal);
-        });
+        // Function to setup event listeners (called every time barang is selected)
+        function setupBarangEventListeners() {
+            // Use event delegation via document body untuk menghindari masalah timing
+            // Hapus old listeners dengan flag
+            if (!window.barangEventListenersSetup) {
+                // Setup ONE-TIME event delegation
+                document.body.addEventListener('input', function(e) {
+                    if (e.target && e.target.id === 'barangJumlah') {
+                        validateBarangStock();
+                        calculateBarangTotal();
+                    } else if (e.target && (e.target.id === 'barangHarga' || e.target.id === 'barangDiscount')) {
+                        calculateBarangTotal();
+                    }
+                });
+                
+                document.body.addEventListener('change', function(e) {
+                    if (e.target && e.target.id === 'barangJumlah') {
+                        validateBarangStock();
+                        calculateBarangTotal();
+                    }
+                });
+                
+                window.barangEventListenersSetup = true;
+            }
+        }
+        
+        // Function to validate stock (make it accessible in wider scope)
+         function validateBarangStock() {
+             const elBarangJumlah = document.getElementById('barangJumlah');
+             const alertDiv = document.getElementById('barangStokAlert');
+             const alertText = document.getElementById('barangStokAlertText');
+             const btnSave = document.getElementById('btnSaveBarang');
+             
+             if (!elBarangJumlah || !alertDiv || !alertText || !btnSave) {
+                 return true; // Elements not ready yet
+             }
+             
+             const jumlah = parseFloat(elBarangJumlah.value) || 0;
+             
+             // Check if stock is zero first
+             if (window.currentStokBarang <= 0) {
+                 alertDiv.className = 'alert alert-danger py-2 mt-2 mb-0';
+                 alertText.textContent = 'Stok barang tersebut kosong';
+                 alertDiv.style.display = 'block';
+                 btnSave.disabled = true;
+                 return false;
+             }
+             
+             // Then check if quantity exceeds stock
+             if (jumlah > window.currentStokBarang) {
+                 // Stock insufficient
+                 alertDiv.className = 'alert alert-danger py-2 mt-4 mb-0';
+                 alertText.textContent = 'Stok tidak mencukupi (Tersedia: ' + window.currentStokBarang + ')';
+                 alertDiv.style.display = 'block';
+                 btnSave.disabled = true;
+                 return false;
+             } else if (jumlah > 0 && jumlah <= window.currentStokBarang) {
+                 // Valid quantity
+                 alertDiv.style.display = 'none';
+                 btnSave.disabled = false;
+                 return true;
+             } else {
+                 // Zero or negative (will be handled by save button)
+                 alertDiv.style.display = 'none';
+                 btnSave.disabled = false;
+                 return true;
+             }
+         }
         
         function calculateBarangTotal() {
-            const jumlah = parseFloat(document.getElementById('barangJumlah').value) || 0;
-            const harga = parseFloat(document.getElementById('barangHarga').value) || 0;
-            const discount = parseFloat(document.getElementById('barangDiscount').value) || 0;
+             const elBarangJumlah = document.getElementById('barangJumlah');
+             const elBarangHarga = document.getElementById('barangHarga');
+             const elBarangDiscount = document.getElementById('barangDiscount');
+             const elBarangTotalHarga = document.getElementById('barangTotalHarga');
+             
+             if (!elBarangJumlah || !elBarangHarga || !elBarangDiscount || !elBarangTotalHarga) {
+                 return; // Elements not ready yet
+             }
+             
+             const jumlah = parseFloat(elBarangJumlah.value) || 0;
+             const harga = parseFloat(elBarangHarga.value) || 0;
+             const discount = parseFloat(elBarangDiscount.value) || 0;
             
             const subtotal = jumlah * harga;
             const discountAmount = subtotal * (discount / 100);
             const total = subtotal - discountAmount;
             
-            document.getElementById('barangTotalHarga').value = 'Rp ' + formatNumber(total);
-        }
+             elBarangTotalHarga.value = 'Rp ' + formatNumber(total);
+          }
         
-        document.getElementById('btnSaveBarang').addEventListener('click', function() {
-            if (!currentBarangData) {
-                alert('Pilih barang terlebih dahulu!');
-                return;
-            }
-            
-            const jumlah = parseFloat(document.getElementById('barangJumlah').value) || 0;
-            const harga = parseFloat(document.getElementById('barangHarga').value) || 0;
-            const discount = parseFloat(document.getElementById('barangDiscount').value) || 0;
-            
-            if (jumlah <= 0) {
-                alert('Jumlah harus lebih dari 0!');
-                return;
-            }
+          const btnSaveBarangEl = document.getElementById('btnSaveBarang');
+         if (btnSaveBarangEl) {
+             btnSaveBarangEl.addEventListener('click', function() {
+                 const elBarangStokAlert = document.getElementById('barangStokAlert');
+                 const elBarangStokAlertText = document.getElementById('barangStokAlertText');
+                 
+                // Validasi 1: Barang sudah dipilih?
+                 if (!window.currentBarangData) {
+                     if (elBarangStokAlert && elBarangStokAlertText) {
+                         elBarangStokAlert.className = 'alert alert-warning py-2 mt-2 mb-0';
+                         elBarangStokAlertText.textContent = 'Pilih barang terlebih dahulu!';
+                         elBarangStokAlert.style.display = 'block';
+                     }
+                     return;
+                 }
+                 
+                 const elBarangJumlahSave = document.getElementById('barangJumlah');
+                 const elBarangHargaSave = document.getElementById('barangHarga');
+                 const elBarangDiscountSave = document.getElementById('barangDiscount');
+                 
+                 const jumlah = parseFloat(elBarangJumlahSave?.value) || 0;
+                 const harga = parseFloat(elBarangHargaSave?.value) || 0;
+                 const discount = parseFloat(elBarangDiscountSave?.value) || 0;
+             
+             // Validasi 2: Jumlah > 0?
+             if (jumlah <= 0) {
+                 if (elBarangStokAlert && elBarangStokAlertText) {
+                     elBarangStokAlert.className = 'alert alert-warning py-2 mt-2 mb-0';
+                     elBarangStokAlertText.textContent = 'Jumlah harus lebih dari 0!';
+                     elBarangStokAlert.style.display = 'block';
+                 }
+                 return;
+             }
+             
+             // Validasi 3: Stok tersedia?
+             if (window.currentStokBarang <= 0) {
+                 if (elBarangStokAlert && elBarangStokAlertText) {
+                     elBarangStokAlert.className = 'alert alert-danger py-2 mt-2 mb-0';
+                     elBarangStokAlertText.textContent = 'Stok barang tersebut kosong';
+                     elBarangStokAlert.style.display = 'block';
+                 }
+                 btnSaveBarangEl.disabled = true;
+                 return;
+             }
+             
+             // Validasi 4: Jumlah tidak melebihi stok?
+             if (jumlah > window.currentStokBarang) {
+                 if (elBarangStokAlert && elBarangStokAlertText) {
+                     elBarangStokAlert.className = 'alert alert-danger py-2 mt-2 mb-0';
+                     elBarangStokAlertText.textContent = 'Stok tidak mencukupi (Tersedia: ' + window.currentStokBarang + ')';
+                     elBarangStokAlert.style.display = 'block';
+                 }
+                 btnSaveBarangEl.disabled = true;
+                 return;
+             }
+             
+             // Semua validasi passed - sembunyikan alert dan lanjutkan
+             if (elBarangStokAlert) {
+                 elBarangStokAlert.style.display = 'none';
+             }
             
             const subtotal = jumlah * harga;
             const discountAmount = subtotal * (discount / 100);
@@ -1293,11 +1950,11 @@ document.addEventListener('DOMContentLoaded', function() {
             detailBarangCounter++;
             detailBarangData.push({
                 id: detailBarangCounter,
-                KodeBarang: currentBarangData.KodeBarang,
-                NamaBarang: currentBarangData.NamaBarang,
-                Satuan: currentBarangData.Satuan,
-                Merek: currentBarangData.NamaMerek || '-',
-                Jenis: currentBarangData.NamaJenis || '-',
+                KodeBarang: window.currentBarangData.KodeBarang,
+                NamaBarang: window.currentBarangData.NamaBarang,
+                Satuan: window.currentBarangData.Satuan,
+                Merek: window.currentBarangData.NamaMerek || '-',
+                Jenis: window.currentBarangData.NamaJenis || '-',
                 Jumlah: jumlah,
                 HargaSatuan: harga,
                 Discount: discount,
@@ -1309,6 +1966,7 @@ document.addEventListener('DOMContentLoaded', function() {
             calculateTotals();
             modal.hide();
         });
+         }
     }
     
     // Render Jasa Table (assigned to global window)
@@ -2052,6 +2710,22 @@ function escapeHtml(text) {
     background-color: #d1ecf1;
     border: 1px solid #bee5eb;
     color: #0c5460;
+}
+
+/* Button icon add styling */
+.btn-icon-add {
+    min-width: 45px;
+    height: calc(2.25rem + 2px); /* Sama dengan tinggi .form-select */
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: top;
+}
+
+.btn-icon-add i {
+    font-size: 1.25rem;
+    line-height: 1;
 }
 
 /* Hide number input spinner (arrows) */
