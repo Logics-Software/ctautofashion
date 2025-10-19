@@ -3,9 +3,9 @@
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center me-2">
-                    <h5 class="mb-0">
+                    <h4 class="mb-0">
                         <i class="fas fa-file-invoice me-2"></i>Transaksi Work Order
-                    </h5>
+                    </h4>
                     <button type="button" class="btn btn-primary btn-sm" id="btnNewOrder">
                         <i class="fas fa-plus me-1"></i>Work Order Baru
                     </button>
@@ -15,9 +15,9 @@
 
                 <!-- Form Section (Initially Hidden) -->
                 <div id="formSection" style="display: none;">
-                    <h4 class="mb-3">
+                    <h5 class="mb-3">
                         <i class="fa-solid fa-plus-circle me-2"></i>Buat Work Order Baru
-                    </h4>
+                    </h5>
                     <form id="formWorkOrder">
                         <!-- Header Section -->
                         <div class="mb-3">
@@ -642,7 +642,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fa-solid fa-times me-2"></i>Tidak
                 </button>
-                <button type="button" class="btn btn-warning" id="btnConfirmCancel">
+                <button type="button" class="btn btn-warning" id="btnConfirmCancel" data-bs-dismiss="modal">
                     <i class="fa-solid fa-ban me-2"></i>Ya, Batalkan
                 </button>
             </div>
@@ -808,6 +808,9 @@ const basePath = '<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>';
 let customerChoice, kendaraanChoice, montirChoice, pickerChoice;
 let detailJasaCounter = 0;
 let detailBarangCounter = 0;
+// Modal instances
+let confirmCancelModal, confirmSaveModal, confirmDeleteModal;
+let addCustomerModal, addKendaraanModal, detailModal;
 let detailJasaData = [];
 let detailBarangData = [];
 let currentEditNoOrder = '';
@@ -939,6 +942,55 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchTerm = e.detail.value;
         if (searchTerm.length >= 1) {
             loadPicker(searchTerm);
+        }
+    });
+    
+    // Initialize Bootstrap Modals with proper options
+    const confirmCancelElement = document.getElementById('confirmCancelModal');
+    confirmCancelModal = new bootstrap.Modal(confirmCancelElement, {
+        backdrop: true,
+        keyboard: true
+    });
+    
+    confirmSaveModal = new bootstrap.Modal(document.getElementById('confirmSaveModal'), {
+        backdrop: true,
+        keyboard: true
+    });
+    confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'), {
+        backdrop: true,
+        keyboard: true
+    });
+    addCustomerModal = new bootstrap.Modal(document.getElementById('addCustomerModal'), {
+        backdrop: true,
+        keyboard: true
+    });
+    addKendaraanModal = new bootstrap.Modal(document.getElementById('addKendaraanModal'), {
+        backdrop: true,
+        keyboard: true
+    });
+    detailModal = new bootstrap.Modal(document.getElementById('detailModal'), {
+        backdrop: true,
+        keyboard: true
+    });
+    
+    // Flag to track if cancel was confirmed
+    let cancelConfirmed = false;
+    
+    // Listen to modal hidden event for cleanup
+    confirmCancelElement.addEventListener('hidden.bs.modal', function() {
+        if (cancelConfirmed) {
+            // Perform the actual cancellation
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('listSection').style.display = 'block';
+            resetForm();
+            cancelConfirmed = false;
+            
+            // Force cleanup of any remaining backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
     });
     
@@ -1154,7 +1206,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('formAddCustomer').reset();
         
         // Show modal
-        const addCustomerModal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
         addCustomerModal.show();
     });
     
@@ -1201,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Close add customer modal
-                bootstrap.Modal.getInstance(document.getElementById('addCustomerModal')).hide();
+                addCustomerModal.hide();
                 
                 // Auto-select the new customer in dropdown
                 customerChoice.setChoices([{
@@ -1255,7 +1306,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('formAddKendaraan').reset();
         
         // Show modal
-        const addKendaraanModal = new bootstrap.Modal(document.getElementById('addKendaraanModal'));
         addKendaraanModal.show();
     });
     
@@ -1336,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Close add vehicle modal
-                bootstrap.Modal.getInstance(document.getElementById('addKendaraanModal')).hide();
+                addKendaraanModal.hide();
                 
                 // Auto-select the new vehicle in dropdown
                 kendaraanChoice.setChoices([{
@@ -1375,7 +1425,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById('btnCancel').addEventListener('click', function() {
-        const confirmCancelModal = new bootstrap.Modal(document.getElementById('confirmCancelModal'));
         confirmCancelModal.show();
     });
     
@@ -2040,7 +2089,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.removeJasa = function(id) {
         pendingDeleteItem = id;
         pendingDeleteType = 'jasa';
-        const confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
         confirmDeleteModal.show();
     };
     
@@ -2048,7 +2096,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.removeBarang = function(id) {
         pendingDeleteItem = id;
         pendingDeleteType = 'barang';
-        const confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
         confirmDeleteModal.show();
     };
     
@@ -2161,7 +2208,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('confirm_totalorder').textContent = 'Rp ' + formatNumber(totalOrder);
         
         // Show modal
-        const confirmSaveModal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
         confirmSaveModal.show();
     });
     
@@ -2276,7 +2322,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('confirmSaveModal')).hide();
+                confirmSaveModal.hide();
                 
                 // Show success modal
                 const successTitle = isEditMode ? 'Work Order berhasil diupdate!' : 'Work Order berhasil disimpan!';
@@ -2324,17 +2370,15 @@ document.addEventListener('DOMContentLoaded', function() {
         pendingDeleteType = null;
         
         // Close modal
-        bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+        confirmDeleteModal.hide();
     });
     
     // Handle Confirm Cancel Button
     document.getElementById('btnConfirmCancel').addEventListener('click', function() {
-        document.getElementById('formSection').style.display = 'none';
-        document.getElementById('listSection').style.display = 'block';
-        resetForm();
-        
-        // Close modal
-        bootstrap.Modal.getInstance(document.getElementById('confirmCancelModal')).hide();
+        // Set flag that cancel was confirmed
+        // Modal will close automatically due to data-bs-dismiss attribute
+        // The actual reset will happen in 'hidden.bs.modal' event
+        cancelConfirmed = true;
     });
     
     // Helper function to show alert (inside DOMContentLoaded for access to basePath)
@@ -2407,8 +2451,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Show Work Order Detail Modal
 function showWorkOrderDetail(noOrder) {
     // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-    modal.show();
+    detailModal.show();
     
     // Show loading spinner, hide content
     document.getElementById('loadingSpinner').style.display = 'block';
@@ -2525,7 +2568,7 @@ function editWorkOrder() {
     currentEditNoOrder = noOrder;
     
     // Close detail modal
-    bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+    detailModal.hide();
     
     // Show loading indicator
     const basePath = '<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>';
@@ -2560,7 +2603,7 @@ function populateFormForEdit(data) {
     const header = data.header;
     
     // Set form title to edit mode
-    document.querySelector('#formSection h4').innerHTML = '<i class="fa-solid fa-edit me-2"></i>Edit Work Order: ' + header.NoOrder;
+    document.querySelector('#formSection h5').innerHTML = '<i class="fa-solid fa-edit me-2"></i>Edit Work Order: ' + header.NoOrder;
     
     // Change button text
     document.getElementById('btnSave').innerHTML = '<i class="fas fa-save me-1"></i>Update Work Order';

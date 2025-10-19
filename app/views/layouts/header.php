@@ -21,7 +21,7 @@ if ($is_logged_in) {
     <?php if ($is_logged_in): ?>
         <!-- Dashboard Header -->
         <div class="dashboard-header">
-            <div class="container">
+            <div class="container-fluid px-3">
                 <div class="row align-items-center">
                     <div class="col-8 col-md-8">
                         <div class="d-flex align-items-center">
