@@ -90,7 +90,7 @@ if ($is_logged_in) {
                 <nav class="sidebar-nav">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/transaksi-work-order">
+                            <a class="nav-link sidebar-link" href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/dashboard">
                             <i class="fa-solid fa-gauge  me-2"></i>Dashboard
                             </a>
                         </li>

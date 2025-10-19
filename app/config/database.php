@@ -19,11 +19,6 @@ try {
     
     // Additional optimizations
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);  // Fetch as associative array by default
-    
-    // Test connection
-    if ($pdo) {
-        // Connection successful - no output needed
-    }
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }

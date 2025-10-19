@@ -238,31 +238,70 @@ class WorkOrderController {
      * Generate PDF from work order data
      */
     private function generatePDF($detail) {
+        // Check if Dompdf library exists
+        $dompdfPath = BASE_PATH . '/libs/dompdf/autoload.inc.php';
+        
+        if (!file_exists($dompdfPath)) {
+            echo "Error: Dompdf library not found! Please install Dompdf to generate PDF.";
+            exit;
+        }
+        
+        // Generate PDF using Dompdf
+        $this->generatePDFWithDompdf($detail);
+    }
+    
+    /**
+     * Generate PDF using Dompdf library (Auto Download)
+     */
+    private function generatePDFWithDompdf($detail) {
+        require_once BASE_PATH . '/libs/dompdf/autoload.inc.php';
+        
         $header = $detail['header'];
         $services = $detail['services'] ?? [];
         $items = $detail['items'] ?? [];
         
-        // Set HTML headers for print view
-        header('Content-Type: text/html; charset=UTF-8');
+        // Create HTML content
+        $html = $this->getPDFHTMLContent($header, $services, $items);
         
-        // Start HTML for PDF (using browser's print to PDF functionality)
+        // Initialize Dompdf
+        $options = new \Dompdf\Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+        
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        
+        // Output PDF for download
+        $filename = 'WorkOrder_' . $header['NoOrder'] . '_' . date('Ymd_His') . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+    
+    /**
+     * Get PDF HTML Content (for Dompdf)
+     */
+    private function getPDFHTMLContent($header, $services, $items) {
+        ob_start();
         ?>
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
             <title>Work Order - <?php echo htmlspecialchars($header['NoOrder']); ?></title>
             <style>
                 @page {
-                    size: A4;
                     margin: 15mm;
                 }
                 body {
-                    font-family: Arial, sans-serif;
-                    font-size: 11pt;
+                    font-family: 'DejaVu Sans', Arial, sans-serif;
+                    font-size: 10pt;
                     color: #000;
                     margin: 0;
-                    padding: 20px;
+                    padding: 0;
                 }
                 .header {
                     text-align: center;
@@ -271,49 +310,56 @@ class WorkOrderController {
                     padding-bottom: 10px;
                 }
                 .header h1 {
-                    margin: 0;
-                    font-size: 20pt;
+                    margin: 0 0 5px 0;
+                    font-size: 18pt;
+                    font-weight: bold;
                 }
                 .header p {
-                    margin: 5px 0;
+                    margin: 3px 0;
+                    font-size: 10pt;
                 }
                 .info-section {
-                    margin-bottom: 20px;
+                    margin-bottom: 15px;
                 }
                 .info-table {
                     width: 100%;
                     border-collapse: collapse;
                 }
                 .info-table td {
-                    padding: 5px;
+                    padding: 2px;
                     vertical-align: top;
+                    font-size: 9pt;
                 }
                 .info-table td:first-child {
                     width: 30%;
                     font-weight: bold;
                 }
+                .section-title {
+                    font-size: 12pt;
+                    font-weight: bold;
+                    margin-top: 15px;
+                    margin-bottom: 5px;
+                    color: #333;
+                    padding-bottom: 3px;
+                }
                 .data-table {
                     width: 100%;
                     border-collapse: collapse;
-                    margin-bottom: 20px;
+                    margin-bottom: 15px;
                 }
                 .data-table th {
-                    background-color: #333;
+                    background-color: #717578;
                     color: white;
-                    padding: 8px;
-                    text-align: left;
+                    padding: 6px 4px;
+                    text-align: center;
                     border: 1px solid #000;
+                    font-size: 9pt;
+                    font-weight: bold;
                 }
                 .data-table td {
-                    padding: 6px;
-                    border: 1px solid #000;
-                }
-                .section-title {
-                    font-size: 14pt;
-                    font-weight: bold;
-                    margin-top: 20px;
-                    margin-bottom: 10px;
-                    color: #333;
+                    padding: 5px 4px;
+                    border: 1px solid #666;
+                    font-size: 9pt;
                 }
                 .text-right {
                     text-align: right;
@@ -322,29 +368,24 @@ class WorkOrderController {
                     text-align: center;
                 }
                 .total-section {
-                    margin-top: 20px;
-                    text-align: right;
+                    margin-top: 10px;
+                    float: right;
+                    width: 300px;
                 }
                 .total-section table {
-                    margin-left: auto;
-                    min-width: 300px;
+                    width: 100%;
                 }
                 .total-section td {
-                    padding: 5px 10px;
+                    padding: 4px 8px;
+                    font-size: 9pt;
                 }
                 .grand-total {
                     font-weight: bold;
-                    font-size: 14pt;
+                    font-size: 11pt;
                     border-top: 2px solid #000;
                 }
-                @media print {
-                    body {
-                        margin: 0;
-                        padding: 10mm;
-                    }
-                    .no-print {
-                        display: none;
-                    }
+                .grand-total td {
+                    padding-top: 8px !important;
                 }
             </style>
         </head>
@@ -359,9 +400,6 @@ class WorkOrderController {
             <!-- Customer & Vehicle Information -->
             <div class="info-section">
                 <table class="info-table">
-                    <tr>
-                        <td colspan="2" style="font-size: 12pt; font-weight: bold; padding-bottom: 10px;">INFORMASI CUSTOMER & KENDARAAN</td>
-                    </tr>
                     <tr>
                         <td>Customer</td>
                         <td>: <?php echo htmlspecialchars($header['NamaCustomer'] ?? '-'); ?></td>
@@ -395,16 +433,16 @@ class WorkOrderController {
             
             <!-- Service Transactions -->
             <?php if (!empty($services)): ?>
-            <div class="section-title">TRANSAKSI SERVICE</div>
+            <div class="section-title">JASA/SERVICE</div>
             <table class="data-table">
-                <thead>
+                <thead class="teble-dark">
                     <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 40%;">Nama Jasa</th>
-                        <th style="width: 25%;">Mekanik</th>
-                        <th style="width: 10%;" class="text-center">QTY</th>
-                        <th style="width: 20%;" class="text-right">Tarif</th>
-                        <th style="width: 20%;" class="text-right">Total</th>
+                        <th align="center" style="width: 5%;">No</th>
+                        <th align="center" style="width: 45%;">Nama Jasa</th>
+                        <th align="center" style="width: 25%;">Mekanik</th>
+                        <th align="center" style="width: 10%;" class="text-center">QTY</th>
+                        <th align="center" style="width: 15%;" class="text-right">Tarif</th>
+                        <th align="center" style="width: 22%;" class="text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -427,17 +465,17 @@ class WorkOrderController {
             
             <!-- Item Transactions -->
             <?php if (!empty($items)): ?>
-            <div class="section-title">TRANSAKSI BARANG</div>
+            <div class="section-title">BARANG/SPARE PART</div>
             <table class="data-table">
-                <thead>
+                <thead class="teble-dark">
                     <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 35%;">Nama Barang</th>
-                        <th style="width: 20%;">Merek</th>
-                        <th style="width: 10%;" class="text-center">Satuan</th>
-                        <th style="width: 10%;" class="text-center">QTY</th>
-                        <th style="width: 20%;" class="text-right">Harga</th>
-                        <th style="width: 20%;" class="text-right">Total</th>
+                        <th align="center" style="width: 5%;">No</th>
+                        <th align="center" style="width: 31%;">Nama Barang</th>
+                        <th align="center" style="width: 15%;">Merek</th>
+                        <th align="center" style="width: 8%;" class="text-center">Satuan</th>
+                        <th align="center" style="width: 10%;" class="text-center">QTY</th>
+                        <th align="center" style="width: 15%;" class="text-right">Harga</th>
+                        <th align="center" style="width: 18%;" class="text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -464,8 +502,8 @@ class WorkOrderController {
                 <table>
                     <tr>
                         <td>Total Jasa</td>
-                        <td style="width: 20px;">:</td>
-                        <td class="text-right" style="min-width: 150px;"><strong>Rp <?php echo number_format($header['TotalJasa'] ?? 0, 0, ',', '.'); ?></strong></td>
+                        <td style="width: 10px;">:</td>
+                        <td class="text-right"><strong>Rp <?php echo number_format($header['TotalJasa'] ?? 0, 0, ',', '.'); ?></strong></td>
                     </tr>
                     <tr>
                         <td>Total Barang</td>
@@ -473,30 +511,18 @@ class WorkOrderController {
                         <td class="text-right"><strong>Rp <?php echo number_format($header['TotalBarang'] ?? 0, 0, ',', '.'); ?></strong></td>
                     </tr>
                     <tr class="grand-total">
-                        <td style="padding-top: 10px;">TOTAL ORDER</td>
-                        <td style="padding-top: 10px;">:</td>
-                        <td class="text-right" style="padding-top: 10px; color: #c00;">Rp <?php echo number_format($header['TotalOrder'] ?? 0, 0, ',', '.'); ?></td>
+                        <td>TOTAL ORDER</td>
+                        <td>:</td>
+                        <td class="text-right" style="color: #c00;">Rp <?php echo number_format($header['TotalOrder'] ?? 0, 0, ',', '.'); ?></td>
                     </tr>
                 </table>
             </div>
             
-            <div class="no-print" style="margin-top: 30px; text-align: center;">
-                <button onclick="window.print()" style="padding: 10px 30px; font-size: 14pt; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px;">
-                    Print / Save as PDF
-                </button>
-                <button onclick="window.close()" style="padding: 10px 30px; font-size: 14pt; cursor: pointer; background: #6c757d; color: white; border: none; border-radius: 5px; margin-left: 10px;">
-                    Close
-                </button>
-            </div>
-            
-            <script>
-                // Auto print when page loads (optional)
-                // window.onload = function() { window.print(); }
-            </script>
+            <div style="clear: both;"></div>
         </body>
         </html>
         <?php
-        exit;
+        return ob_get_clean();
     }
     
     /**

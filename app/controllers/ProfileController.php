@@ -67,9 +67,6 @@ class ProfileController {
         // Handle photo upload first if provided
         $photo_uploaded = false;
         if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
-            // Debug: Log file info
-            error_log("Uploading file: " . $_FILES['profile_photo']['name'] . " Size: " . $_FILES['profile_photo']['size']);
-            
             $upload_result = $this->profileModel->uploadProfilePhoto($user_id, $_FILES['profile_photo']);
             if (!$upload_result['success']) {
                 $_SESSION['error'] = 'Foto gagal diupload: ' . $upload_result['message'];
@@ -78,8 +75,6 @@ class ProfileController {
             }
             $photo_uploaded = true;
         } else if (isset($_FILES['profile_photo'])) {
-            // Debug: Log upload error
-            error_log("Upload error: " . $_FILES['profile_photo']['error']);
         }
         
         // Update user name

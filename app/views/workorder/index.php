@@ -226,8 +226,6 @@ $title = 'Informasi Transaksi Work Order';
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     Menampilkan <?php echo count($workOrders); ?> dari <?php echo number_format($totalWorkOrders); ?> data
-                    <br><small>Halaman <?php echo $page; ?> dari <?php echo $totalPages; ?> halaman (Limit: <?php echo $limit; ?>, Offset: <?php echo ($page - 1) * $limit; ?>)</small>
-                    <br><small>Debug: Total Records = <?php echo $totalWorkOrders; ?>, Current Page = <?php echo $page; ?>, Records per page = <?php echo $limit; ?></small>
                     <?php if (!empty($filters['search'])): ?>
                         untuk pencarian "<strong><?php echo htmlspecialchars($filters['search']); ?></strong>"
                     <?php endif; ?>

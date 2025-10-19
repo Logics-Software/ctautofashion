@@ -771,9 +771,6 @@ class TransaksiWorkOrderModel {
      */
     public function getWorkOrders($filters, $limit, $offset, $userID = null, $tipeUser = null) {
         try {
-            // Debug logging
-            error_log("getWorkOrders - UserID: " . ($userID ?? 'null') . ", TipeUser: " . ($tipeUser ?? 'null'));
-            
             $sql = "SELECT * FROM (
                         SELECT ROW_NUMBER() OVER (ORDER BY H.NoOrder DESC) as RowNum,
                                H.NoOrder, H.TanggalOrder, H.StatusOrder, 
@@ -791,11 +788,8 @@ class TransaksiWorkOrderModel {
             
             // Filter berdasarkan UserID jika TipeUser < 2
             if ($tipeUser !== null && $tipeUser < 2 && $userID !== null) {
-                error_log("Applying UserID filter: TipeUser={$tipeUser}, UserID={$userID}");
                 $sql .= " AND H.UserID = ?";
                 $params[] = $userID;
-            } else {
-                error_log("NOT applying UserID filter - TipeUser: " . ($tipeUser ?? 'null') . " >= 2 or UserID is null");
             }
             
             // Search filter
