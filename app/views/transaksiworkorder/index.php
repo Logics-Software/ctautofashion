@@ -6,9 +6,17 @@
                     <h4 class="mb-0">
                         <i class="fas fa-file-invoice me-2"></i>Transaksi Work Order
                     </h4>
-                    <button type="button" class="btn btn-primary btn-sm" id="btnNewOrder">
-                        <i class="fas fa-plus me-1"></i>Work Order Baru
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success btn-sm" onclick="window.location.href='<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/workorder'">
+                            <i class="fas fa-clipboard-list me-1"></i>Data Work Order
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="window.location.href='<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/processworkorder'">
+                            <i class="fas fa-gears me-1"></i>Proses Work Order
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnNewOrder">
+                            <i class="fas fa-plus me-1"></i>Work Order Baru
+                        </button>
+                    </div>
                 </div>
 
                 <hr>
@@ -78,6 +86,14 @@
                                                 <div>
                                                     <strong>No Polisi:</strong>
                                                     <span id="kendaraanNoPolisi">-</span>
+                                                </div>
+                                                <div>
+                                                    <strong>Merek:</strong>
+                                                    <span id="kendaraanMerek">-</span>
+                                                </div>
+                                                <div>
+                                                    <strong>Model:</strong>
+                                                    <span id="kendaraanModel">-</span>
                                                 </div>
                                                 <div>
                                                     <strong>Tipe:</strong>
@@ -520,12 +536,15 @@
                         </div>
                     </div>
                 </div>
-                <!-- Modal Footer dengan Button Edit -->
+                <!-- Modal Footer dengan Button Edit dan Download PDF -->
                 <div class="modal-footer" id="detailModalFooter" style="display: none;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa-solid fa-times me-2"></i>Tutup
                     </button>
-                    <button type="button" class="btn btn-primary" id="btnEditWorkOrder" onclick="editWorkOrder()">
+                    <button type="button" class="btn btn-danger" id="btnDownloadPDF" onclick="downloadWorkOrderPDF()" style="display: none;">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Work Order (PDF)
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnEditWorkOrder" onclick="editWorkOrder()" style="display: none;">
                         <i class="fa-solid fa-edit me-2"></i>Edit Work Order
                     </button>
                 </div>
@@ -985,12 +1004,22 @@ document.addEventListener('DOMContentLoaded', function() {
             resetForm();
             cancelConfirmed = false;
             
+            // Enable btnNewOrder saat kembali ke list
+            const btnNewOrder = document.getElementById('btnNewOrder');
+            if (btnNewOrder) {
+                btnNewOrder.disabled = false;
+            }
+            
             // Force cleanup of any remaining backdrops
             const backdrops = document.querySelectorAll('.modal-backdrop');
             backdrops.forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
+        } else {
+            // Modal closed without confirming (clicked X or Tidak)
+            // Reset flag just in case
+            cancelConfirmed = false;
         }
     });
     
@@ -1023,6 +1052,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(vehicle => {
                     if (vehicle && vehicle.KodeKendaraan) {
                         document.getElementById('kendaraanNoPolisi').textContent = vehicle.NoPolisi || '-';
+                        document.getElementById('kendaraanMerek').textContent = vehicle.NamaMerek || '-';
+                        document.getElementById('kendaraanModel').textContent = vehicle.NamaJenis || '-';
                         document.getElementById('kendaraanTipe').textContent = vehicle.Tipe || '-';
                         document.getElementById('kendaraanTahun').textContent = vehicle.Tahun || '-';
                         document.getElementById('kendaraanWarna').textContent = vehicle.Warna || '-';
@@ -1175,6 +1206,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('formSection').style.display = 'block';
         document.getElementById('listSection').style.display = 'none';
         resetForm();
+        
+        // Disable btnNewOrder saat masuk form create
+        this.disabled = true;
         
         // Auto-fill default picker if TipeUser = 1
         <?php if (isset($defaultPicker) && $defaultPicker): ?>
@@ -1944,9 +1978,9 @@ document.addEventListener('DOMContentLoaded', function() {
                          elBarangStokAlertText.textContent = 'Pilih barang terlebih dahulu!';
                          elBarangStokAlert.style.display = 'block';
                      }
-                     return;
-                 }
-                 
+                return;
+            }
+            
                  const elBarangJumlahSave = document.getElementById('barangJumlah');
                  const elBarangHargaSave = document.getElementById('barangHarga');
                  const elBarangDiscountSave = document.getElementById('barangDiscount');
@@ -1956,14 +1990,14 @@ document.addEventListener('DOMContentLoaded', function() {
                  const discount = parseFloat(elBarangDiscountSave?.value) || 0;
              
              // Validasi 2: Jumlah > 0?
-             if (jumlah <= 0) {
+            if (jumlah <= 0) {
                  if (elBarangStokAlert && elBarangStokAlertText) {
                      elBarangStokAlert.className = 'alert alert-warning py-2 mt-2 mb-0';
                      elBarangStokAlertText.textContent = 'Jumlah harus lebih dari 0!';
                      elBarangStokAlert.style.display = 'block';
                  }
-                 return;
-             }
+                return;
+            }
              
              // Validasi 3: Stok tersedia?
              if (window.currentStokBarang <= 0) {
@@ -1990,7 +2024,7 @@ document.addEventListener('DOMContentLoaded', function() {
              // Semua validasi passed - sembunyikan alert dan lanjutkan
              if (elBarangStokAlert) {
                  elBarangStokAlert.style.display = 'none';
-             }
+            }
             
             const subtotal = jumlah * harga;
             const discountAmount = subtotal * (discount / 100);
@@ -2134,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentEditNoOrder = '';
         
         // Reset form title and button text
-        document.querySelector('#formSection h4').innerHTML = '<i class="fa-solid fa-plus-circle me-2"></i>Buat Work Order Baru';
+        document.querySelector('#formSection h5').innerHTML = '<i class="fa-solid fa-plus-circle me-2"></i>Buat Work Order Baru';
         document.getElementById('btnSave').innerHTML = '<i class="fas fa-save me-1"></i>Simpan Work Order';
     }
     
@@ -2330,6 +2364,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Reset edit mode
                 currentEditNoOrder = '';
+                
+                // Enable btnNewOrder
+                document.getElementById('btnNewOrder').disabled = false;
                 
                 // Redirect after 2 seconds
                 setTimeout(() => {
@@ -2534,12 +2571,25 @@ function showWorkOrderDetail(noOrder) {
             const statusOrder = parseInt(data.header.StatusOrder) || 0;
             const detailModalFooter = document.getElementById('detailModalFooter');
             const btnEditWorkOrder = document.getElementById('btnEditWorkOrder');
+            const btnDownloadPDF = document.getElementById('btnDownloadPDF');
             
-            if (statusOrder < 2) {
-                // Store NoOrder for edit function
-                btnEditWorkOrder.setAttribute('data-noorder', data.header.NoOrder);
+            // Show footer if StatusOrder <= 2 (untuk download PDF atau edit)
+            if (statusOrder <= 2) {
                 detailModalFooter.style.display = 'flex';
+                
+                // Show edit button only if StatusOrder < 2
+                if (statusOrder < 2) {
+                    btnEditWorkOrder.setAttribute('data-noorder', data.header.NoOrder);
+                    btnEditWorkOrder.style.display = 'inline-block';
+                } else {
+                    btnEditWorkOrder.style.display = 'none';
+                }
+                
+                // Show download PDF button for StatusOrder <= 2
+                btnDownloadPDF.setAttribute('data-noorder', data.header.NoOrder);
+                btnDownloadPDF.style.display = 'inline-block';
             } else {
+                // Hide footer for StatusOrder > 2
                 detailModalFooter.style.display = 'none';
             }
             
@@ -2552,6 +2602,24 @@ function showWorkOrderDetail(noOrder) {
             alert('Terjadi kesalahan saat memuat data');
             modal.hide();
         });
+}
+
+// Download Work Order PDF Function
+function downloadWorkOrderPDF() {
+    const btnDownload = document.getElementById('btnDownloadPDF');
+    const noOrder = btnDownload.getAttribute('data-noorder');
+    
+    if (!noOrder) {
+        alert('NoOrder tidak ditemukan');
+        return;
+    }
+    
+    // Open PDF in new window/tab
+    const basePath = '<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>';
+    const pdfUrl = basePath + '/workorder?action=download_pdf&noorder=' + encodeURIComponent(noOrder);
+    
+    // Open in new tab
+    window.open(pdfUrl, '_blank');
 }
 
 // Edit Work Order Function
@@ -2588,6 +2656,9 @@ function editWorkOrder() {
             // Show form section, hide list section
             document.getElementById('formSection').style.display = 'block';
             document.getElementById('listSection').style.display = 'none';
+            
+            // Disable btnNewOrder saat edit mode
+            document.getElementById('btnNewOrder').disabled = true;
             
             // Scroll to top
             window.scrollTo(0, 0);
@@ -2633,6 +2704,24 @@ function populateFormForEdit(data) {
         label: header.NamaKendaraan + ' - ' + header.NoPolisi,
         selected: true
     }], 'value', 'label', true);
+    
+    // Trigger kendaraan fetch to show info
+    fetch('<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/transaksi-work-order/get-vehicle?code=' + encodeURIComponent(header.KodeKendaraan))
+        .then(response => response.json())
+        .then(vehicle => {
+            if (vehicle && vehicle.KodeKendaraan) {
+                document.getElementById('kendaraanNoPolisi').textContent = vehicle.NoPolisi || '-';
+                document.getElementById('kendaraanMerek').textContent = vehicle.NamaMerek || '-';
+                document.getElementById('kendaraanModel').textContent = vehicle.NamaJenis || '-';
+                document.getElementById('kendaraanTipe').textContent = vehicle.Tipe || '-';
+                document.getElementById('kendaraanTahun').textContent = vehicle.Tahun || '-';
+                document.getElementById('kendaraanWarna').textContent = vehicle.Warna || '-';
+                document.getElementById('kendaraanInfo').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching vehicle data:', error);
+        });
     
     // Populate Montir
     montirChoice.setChoices([{
