@@ -1,0 +1,31 @@
+# Temporary files
+uploads/temp/
+
+# Signature images
+uploads/signatures/*
+!uploads/signatures/.gitkeep
+
+# Profile photos
+uploads/profiles/*
+!uploads/profiles/.gitkeep
+
+# PHP error logs
+*.log
+php_error.log
+
+# Test files
+test_*.php
+!test_signature_database.php
+!test_pdf_html.php
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+

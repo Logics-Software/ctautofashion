@@ -787,6 +787,253 @@ class TransaksiWorkOrderController {
     }
     
     /**
+     * Download PDF Nota Transaksi Work Order
+     */
+    public function downloadPDF() {
+        // Clear any previous output
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        $noOrder = $_GET['noorder'] ?? '';
+        
+        if (empty($noOrder)) {
+            echo "No Order tidak ditemukan";
+            exit;
+        }
+        
+        try {
+            $detail = $this->model->getWorkOrderDetail($noOrder);
+            
+            if (!$detail || isset($detail['error'])) {
+                echo "Data Work Order tidak ditemukan";
+                exit;
+            }
+            
+            // Generate PDF content
+            $this->generatePDF($detail);
+            
+        } catch (Exception $e) {
+            echo "Terjadi kesalahan: " . $e->getMessage();
+            exit;
+        }
+    }
+    
+    /**
+     * Generate PDF from work order data
+     */
+    private function generatePDF($detail) {
+        $dompdfPath = BASE_PATH . '/libs/dompdf/autoload.inc.php';
+        
+        if (!file_exists($dompdfPath)) {
+            die("DomPDF not found!");
+        }
+        
+        require_once $dompdfPath;
+        
+        $header = $detail['header'];
+        $jasa = $detail['jasa'] ?? [];
+        $barang = $detail['barang'] ?? [];
+        
+        // Get HTML content
+        $pdfHtml = $this->getPDFHTMLContent($header, $jasa, $barang);
+        
+        // Initialize DomPDF with options
+        $options = new \Dompdf\Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', false);
+        $options->set('defaultFont', 'DejaVu Sans');
+        
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($pdfHtml);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        
+        $filename = 'NotaWorkOrder_' . $header['NoOrder'] . '_' . date('Ymd_His') . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+    
+    /**
+     * Get PDF HTML Content
+     */
+    private function getPDFHTMLContent($header, $jasa, $barang) {
+        // Get signature
+        $sig = $header['TandaTanganCustomer'] ?? null;
+        
+        // Build HTML with string concatenation
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; padding: 10px; font-size: 10pt; }
+        p {
+            margin: 0;
+        }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; line-height: 1.2; }
+        .header h1 { margin: 0 0 5px 0; font-size: 16pt; font-weight: bold; }
+        .info-section { margin-bottom: 15px; line-height: 1; }
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table td { padding: 3px; font-size: 9pt; }
+        .info-table td:first-child { width: 30%; font-weight: bold; }
+        .section-title { font-size: 12pt; font-weight: bold; margin-top: 15px; margin-bottom: 5px; }
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .data-table th { background-color: #717578; color: white; padding: 6px 4px; text-align: center; border: 1px solid #000; font-size: 9pt; }
+        .data-table td { padding: 5px 4px; border: 1px solid #666; font-size: 9pt; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .total-section { margin-top: 0px; float: right; width: 300px; line-height: 1; }
+        .total-section table { width: 100%; }
+        .total-section td { padding: 4px 8px; font-size: 9pt; }
+        .grand-total { font-weight: bold; font-size: 11pt; border-top: 2px solid #000; }
+        .signature-section { margin-top: 50px; text-align: right; page-break-inside: avoid; clear: both; }
+        .signature-box { display: inline-block; text-align: center; min-width: 250px; }
+        .signature-img { border: 1px solid #000; max-width: 250px; height: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WORK ORDER</h1>
+        <p><strong>No. Order: ' . htmlspecialchars($header['NoOrder']) . '</strong></p>
+        <p>Tanggal: ' . date('d/m/Y', strtotime($header['TanggalOrder'])) . '</p>
+    </div>
+    
+    <div class="info-section">
+        <table class="info-table">
+            <tr><td>Customer</td><td>: ' . htmlspecialchars($header['NamaCustomer'] ?? '-') . '</td></tr>
+            <tr><td>Alamat</td><td>: ' . htmlspecialchars($header['AlamatCustomer'] ?? '-') . '</td></tr>
+            <tr><td>Kota</td><td>: ' . htmlspecialchars($header['Kota'] ?? '-') . '</td></tr>
+            <tr><td>No. Telepon</td><td>: ' . htmlspecialchars($header['NoTelepon'] ?? '-') . '</td></tr>
+            <tr><td>Kendaraan</td><td>: ' . htmlspecialchars($header['NamaKendaraan'] ?? '-') . '</td></tr>
+            <tr><td>No. Polisi</td><td>: ' . htmlspecialchars($header['NoPolisi'] ?? '-') . '</td></tr>
+            <tr><td>Warna</td><td>: ' . htmlspecialchars($header['Warna'] ?? '-') . '</td></tr>
+            <tr><td>Tahun</td><td>: ' . htmlspecialchars($header['Tahun'] ?? '-') . '</td></tr>
+            <tr><td>Marketing</td><td>: ' . htmlspecialchars($header['NamaPicker'] ?? '-') . '</td></tr>
+            <tr><td>Montir</td><td>: ' . htmlspecialchars($header['NamaMontir'] ?? '-') . '</td></tr>
+        </table>
+    </div>';
+        
+        // JASA Section
+        if (!empty($jasa)) {
+            $html .= '
+    <div class="section-title">JASA/SERVICE</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 35%;">Nama Jasa</th>
+                <th style="width: 20%;">Kategori</th>
+                <th style="width: 8%;">Satuan</th>
+                <th style="width: 8%;">QTY</th>
+                <th style="width: 12%;">Harga</th>
+                <th style="width: 12%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>';
+            
+            $no = 1;
+            foreach ($jasa as $item) {
+                $html .= '
+            <tr>
+                <td class="text-center">' . $no++ . '</td>
+                <td>' . htmlspecialchars($item['NamaJasa'] ?? '-') . '</td>
+                <td>' . htmlspecialchars($item['NamaKategori'] ?? '-') . '</td>
+                <td class="text-center">' . htmlspecialchars($item['Satuan'] ?? '-') . '</td>
+                <td class="text-center">' . (int)($item['Jumlah'] ?? 0) . '</td>
+                <td class="text-right">' . number_format($item['HargaSatuan'] ?? 0, 0, ',', '.') . '</td>
+                <td class="text-right">' . number_format($item['TotalHarga'] ?? 0, 0, ',', '.') . '</td>
+            </tr>';
+            }
+            
+            $html .= '
+        </tbody>
+    </table>';
+        }
+        
+        // BARANG Section
+        if (!empty($barang)) {
+            $html .= '
+    <div class="section-title">BARANG/SPARE PART</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 30%;">Nama Barang</th>
+                <th style="width: 15%;">Merek</th>
+                <th style="width: 8%;">Satuan</th>
+                <th style="width: 8%;">QTY</th>
+                <th style="width: 12%;">Harga</th>
+                <th style="width: 12%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>';
+            
+            $no = 1;
+            foreach ($barang as $item) {
+                $html .= '
+            <tr>
+                <td class="text-center">' . $no++ . '</td>
+                <td>' . htmlspecialchars($item['NamaBarang'] ?? '-') . '</td>
+                <td>' . htmlspecialchars($item['NamaMerek'] ?? '-') . '</td>
+                <td class="text-center">' . htmlspecialchars($item['Satuan'] ?? '-') . '</td>
+                <td class="text-center">' . (int)($item['Jumlah'] ?? 0) . '</td>
+                <td class="text-right">' . number_format($item['HargaSatuan'] ?? 0, 0, ',', '.') . '</td>
+                <td class="text-right">' . number_format($item['TotalHarga'] ?? 0, 0, ',', '.') . '</td>
+            </tr>';
+            }
+            
+            $html .= '
+        </tbody>
+    </table>';
+        }
+        
+        // Total Section
+        $html .= '
+    <div class="total-section">
+        <table>
+            <tr>
+                <td>Total Jasa</td>
+                <td>:</td>
+                <td class="text-right"><strong>Rp ' . number_format($header['TotalJasa'] ?? 0, 0, ',', '.') . '</strong></td>
+            </tr>
+            <tr>
+                <td>Total Barang</td>
+                <td>:</td>
+                <td class="text-right"><strong>Rp ' . number_format($header['TotalBarang'] ?? 0, 0, ',', '.') . '</strong></td>
+            </tr>
+            <tr class="grand-total">
+                <td>TOTAL ORDER</td>
+                <td>:</td>
+                <td class="text-right" style="color: #c00;">Rp ' . number_format($header['TotalOrder'] ?? 0, 0, ',', '.') . '</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="signature-section">
+        <div class="signature-box">
+            <p><strong>Menyetujui,</strong></p>
+            <div style="margin: 20px 0;">';
+        
+        // Add customer signature if available
+        if (!empty($sig)) {
+            $html .= '<img src="' . $sig . '" class="signature-img" alt="Signature" />';
+        } else {
+            $html .= '<p style="color: #999;">(Belum ada tanda tangan)</p>';
+        }
+        
+        $html .= '
+            </div>
+            <p>Customer</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        return $html;
+    }
+    
+    /**
      * Helper: Redirect
      */
     private function redirect($path) {

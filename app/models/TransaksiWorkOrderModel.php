@@ -658,6 +658,19 @@ class TransaksiWorkOrderModel {
                 $_SESSION['user_id']
             ]);
             
+            // Insert signature into HeaderOrderKonfirmasi table
+            if (!empty($data['TandaTangan'])) {
+                $sqlKonfirmasi = "INSERT INTO HeaderOrderKonfirmasi 
+                                 (NoOrder, TandaTanganCustomer, TanggalKonfirmasi, UserID)
+                                 VALUES (?, ?, GETDATE(), ?)";
+                $stmtKonfirmasi = $this->pdo->prepare($sqlKonfirmasi);
+                $stmtKonfirmasi->execute([
+                    $noOrder,
+                    $data['TandaTangan'],
+                    $_SESSION['user_id']
+                ]);
+            }
+            
             // 2. Insert DetailOrderJasa
             if (!empty($data['DetailJasa'])) {
                 $sqlJasa = "INSERT INTO DetailOrderJasa 
@@ -875,7 +888,7 @@ class TransaksiWorkOrderModel {
      */
     public function getWorkOrderDetail($noOrder) {
         try {
-            // Get header data
+            // Get header data with signature from HeaderOrderKonfirmasi
             $sqlHeader = "SELECT 
                             H.NoOrder, H.TanggalOrder, H.KodeCustomer, H.KodeKendaraan,
                             H.KodeMontir, H.KodePicker, H.Keterangan, H.KMAwal, H.KMAkhir,
@@ -883,12 +896,14 @@ class TransaksiWorkOrderModel {
                             C.NamaCustomer, C.AlamatCustomer, C.Kota, C.NoTelepon,
                             K.NamaKendaraan, K.NoPolisi, K.Tahun, K.Warna,
                             M.NamaMontir,
-                            P.NamaPicker
+                            P.NamaPicker,
+                            HK.TandaTanganCustomer, HK.TanggalKonfirmasi
                          FROM HeaderOrder H
                          LEFT JOIN FileCustomer C ON H.KodeCustomer = C.KodeCustomer
                          LEFT JOIN FileKendaraan K ON H.KodeKendaraan = K.KodeKendaraan
                          LEFT JOIN FileMontir M ON H.KodeMontir = M.KodeMontir
                          LEFT JOIN FilePicker P ON H.KodePicker = P.KodePicker
+                         LEFT JOIN HeaderOrderKonfirmasi HK ON H.NoOrder = HK.NoOrder
                          WHERE H.NoOrder = ?";
             
             $stmtHeader = $this->pdo->prepare($sqlHeader);
@@ -948,7 +963,7 @@ class TransaksiWorkOrderModel {
      */
     public function getWorkOrderForEdit($noOrder) {
         try {
-            // Get header data
+            // Get header data with signature from HeaderOrderKonfirmasi
             $sqlHeader = "SELECT 
                             H.NoOrder, H.TanggalOrder, H.KodeCustomer, H.KodeKendaraan,
                             H.KodeMontir, H.KodePicker, H.Keterangan, H.KMAwal, H.KMAkhir,
@@ -956,12 +971,14 @@ class TransaksiWorkOrderModel {
                             C.NamaCustomer,
                             K.NamaKendaraan, K.NoPolisi,
                             M.NamaMontir,
-                            P.NamaPicker
+                            P.NamaPicker,
+                            HK.TandaTanganCustomer, HK.TanggalKonfirmasi
                          FROM HeaderOrder H
                          LEFT JOIN FileCustomer C ON H.KodeCustomer = C.KodeCustomer
                          LEFT JOIN FileKendaraan K ON H.KodeKendaraan = K.KodeKendaraan
                          LEFT JOIN FileMontir M ON H.KodeMontir = M.KodeMontir
                          LEFT JOIN FilePicker P ON H.KodePicker = P.KodePicker
+                         LEFT JOIN HeaderOrderKonfirmasi HK ON H.NoOrder = HK.NoOrder
                          WHERE H.NoOrder = ?";
             
             $stmtHeader = $this->pdo->prepare($sqlHeader);
@@ -1053,6 +1070,40 @@ class TransaksiWorkOrderModel {
                 $data['TotalOrder'],
                 $noOrder
             ]);
+            
+            // Update or insert signature in HeaderOrderKonfirmasi table
+            if (!empty($data['TandaTangan'])) {
+                // Check if konfirmasi already exists
+                $sqlCheckKonfirmasi = "SELECT NoOrder FROM HeaderOrderKonfirmasi WHERE NoOrder = ?";
+                $stmtCheckKonfirmasi = $this->pdo->prepare($sqlCheckKonfirmasi);
+                $stmtCheckKonfirmasi->execute([$noOrder]);
+                
+                if ($stmtCheckKonfirmasi->fetch()) {
+                    // Update existing konfirmasi
+                    $sqlUpdateKonfirmasi = "UPDATE HeaderOrderKonfirmasi 
+                                           SET TandaTanganCustomer = ?, 
+                                               TanggalKonfirmasi = GETDATE(), 
+                                               UserID = ?
+                                           WHERE NoOrder = ?";
+                    $stmtUpdateKonfirmasi = $this->pdo->prepare($sqlUpdateKonfirmasi);
+                    $stmtUpdateKonfirmasi->execute([
+                        $data['TandaTangan'],
+                        $userID,
+                        $noOrder
+                    ]);
+                } else {
+                    // Insert new konfirmasi
+                    $sqlInsertKonfirmasi = "INSERT INTO HeaderOrderKonfirmasi 
+                                           (NoOrder, TandaTanganCustomer, TanggalKonfirmasi, UserID)
+                                           VALUES (?, ?, GETDATE(), ?)";
+                    $stmtInsertKonfirmasi = $this->pdo->prepare($sqlInsertKonfirmasi);
+                    $stmtInsertKonfirmasi->execute([
+                        $noOrder,
+                        $data['TandaTangan'],
+                        $userID
+                    ]);
+                }
+            }
             
             // Delete existing details
             $this->pdo->prepare("DELETE FROM DetailOrderJasa WHERE NoOrder = ?")->execute([$noOrder]);

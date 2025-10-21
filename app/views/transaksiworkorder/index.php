@@ -555,11 +555,11 @@
 
 <!-- Modal Konfirmasi Simpan Work Order -->
 <div class="modal fade" id="confirmSaveModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="fa-solid fa-save me-2"></i>Konfirmasi Simpan Work Order
+                    <i class="fa-solid fa-save me-2"></i>Persetujuan Work Order
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -568,8 +568,8 @@
                     <i class="fa-solid fa-info-circle me-2"></i>
                     <strong>Informasi:</strong> Data akan disimpan dan No Order akan dibuat otomatis.
                 </div>
-                <p class="mb-2"><strong>Pastikan semua data sudah benar sebelum menyimpan!</strong></p>
-                <div class="bg-light p-3 rounded">
+                <p class="mb-2"><strong>Apakah Anda setuju dengan Work Order tersebut?</strong></p>
+                <div class="bg-light p-3 rounded mb-3">
                     <table class="table table-sm table-borderless mb-0">
                         <tr>
                             <td width="35%"><strong>Customer</strong></td>
@@ -598,13 +598,34 @@
                         </tr>
                     </table>
                 </div>
+                
+                <!-- Signature Section -->
+                <div class="border rounded p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">
+                            <i class="fa-solid fa-signature me-2"></i>Tanda Tangan Customer <span class="text-danger">*</span>
+                        </label>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearSignature">
+                            <i class="fa-solid fa-eraser me-1"></i>Hapus
+                        </button>
+                    </div>
+                    <div class="signature-container" style="border: 2px dashed #ccc; border-radius: 8px; background: #fafafa; position: relative;">
+                        <canvas id="signatureCanvas" width="700" height="200" style="display: block; width: 100%; cursor: crosshair; touch-action: none;"></canvas>
+                        <div id="signaturePlaceholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; pointer-events: none; font-size: 14px;">
+                            <i class="fa-solid fa-pen-nib me-2"></i>Tanda tangan di sini
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fa-solid fa-info-circle me-1"></i>Silakan tanda tangan menggunakan mouse atau touchscreen
+                    </small>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fa-solid fa-times me-2"></i>Batal
                 </button>
                 <button type="button" class="btn btn-primary" id="btnConfirmSave">
-                    <i class="fa-solid fa-save me-2"></i>Ya, Simpan
+                    <i class="fa-solid fa-save me-2"></i>Ya, Setuju
                 </button>
             </div>
         </div>
@@ -991,6 +1012,9 @@ document.addEventListener('DOMContentLoaded', function() {
         backdrop: true,
         keyboard: true
     });
+    
+    // Initialize Signature Pad
+    initializeSignaturePad();
     
     // Flag to track if cancel was confirmed
     let cancelConfirmed = false;
@@ -2301,6 +2325,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle Confirm Save Button
     document.getElementById('btnConfirmSave').addEventListener('click', function() {
         const btnConfirm = this;
+        
+        // Validate signature
+        const signature = getSignatureData();
+        if (!signature) {
+            alert('Tanda tangan customer wajib diisi!\nSilakan tanda tangan di area yang tersedia.');
+            return;
+        }
+        
         btnConfirm.disabled = true;
         
         // Check if edit mode
@@ -2331,7 +2363,8 @@ document.addEventListener('DOMContentLoaded', function() {
             TotalBarang: totalBarang,
             TotalOrder: totalOrder,
             DetailJasa: detailJasaData,
-            DetailBarang: detailBarangData
+            DetailBarang: detailBarangData,
+            TandaTangan: signature
         };
         
         // Add NoOrder if edit mode
@@ -2485,6 +2518,136 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
+// ============================================
+// SIGNATURE PAD FUNCTIONS
+// ============================================
+
+let signatureCanvas, signatureContext;
+let isDrawing = false;
+let signatureData = null;
+
+function initializeSignaturePad() {
+    signatureCanvas = document.getElementById('signatureCanvas');
+    signatureContext = signatureCanvas.getContext('2d');
+    
+    // Set canvas dimensions properly
+    const container = signatureCanvas.parentElement;
+    signatureCanvas.width = 700;
+    signatureCanvas.height = 200;
+    
+    // Set drawing styles
+    signatureContext.strokeStyle = '#000';
+    signatureContext.lineWidth = 2;
+    signatureContext.lineCap = 'round';
+    signatureContext.lineJoin = 'round';
+    
+    // Mouse events
+    signatureCanvas.addEventListener('mousedown', startDrawing);
+    signatureCanvas.addEventListener('mousemove', draw);
+    signatureCanvas.addEventListener('mouseup', stopDrawing);
+    signatureCanvas.addEventListener('mouseout', stopDrawing);
+    
+    // Touch events for mobile
+    signatureCanvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+    signatureCanvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+    signatureCanvas.addEventListener('touchend', stopDrawing);
+    
+    // Clear signature button
+    document.getElementById('btnClearSignature').addEventListener('click', clearSignature);
+    
+    // Reset signature when modal is shown
+    document.getElementById('confirmSaveModal').addEventListener('shown.bs.modal', function() {
+        clearSignature();
+    });
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    const rect = signatureCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    signatureContext.beginPath();
+    signatureContext.moveTo(x, y);
+    
+    // Hide placeholder when drawing starts
+    document.getElementById('signaturePlaceholder').style.display = 'none';
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    
+    const rect = signatureCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    signatureContext.lineTo(x, y);
+    signatureContext.stroke();
+}
+
+function stopDrawing() {
+    if (isDrawing) {
+        isDrawing = false;
+        signatureContext.closePath();
+        
+        // Save signature data
+        signatureData = signatureCanvas.toDataURL('image/png');
+    }
+}
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+    });
+    signatureCanvas.dispatchEvent(mouseEvent);
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!isDrawing) return;
+    
+    const touch = e.touches[0];
+    const rect = signatureCanvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    signatureContext.lineTo(x, y);
+    signatureContext.stroke();
+}
+
+function clearSignature() {
+    signatureContext.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    signatureData = null;
+    document.getElementById('signaturePlaceholder').style.display = 'block';
+}
+
+function getSignatureData() {
+    // Check if canvas is empty
+    const imageData = signatureContext.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height);
+    const data = imageData.data;
+    let isEmpty = true;
+    
+    for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] !== 0) {
+            isEmpty = false;
+            break;
+        }
+    }
+    
+    if (isEmpty) {
+        return null;
+    }
+    
+    return signatureCanvas.toDataURL('image/png');
+}
+
+// ============================================
+// END SIGNATURE PAD FUNCTIONS
+// ============================================
+
 // Show Work Order Detail Modal
 function showWorkOrderDetail(noOrder) {
     // Show modal
@@ -2616,7 +2779,7 @@ function downloadWorkOrderPDF() {
     
     // Open PDF in new window/tab
     const basePath = '<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>';
-    const pdfUrl = basePath + '/workorder?action=download_pdf&noorder=' + encodeURIComponent(noOrder);
+    const pdfUrl = basePath + '/transaksi-work-order/download-pdf?noorder=' + encodeURIComponent(noOrder);
     
     // Open in new tab
     window.open(pdfUrl, '_blank');
