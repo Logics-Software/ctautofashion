@@ -142,6 +142,7 @@ $router->addRoute('GET', '/transaksi-work-order/search-customers', 'TransaksiWor
 $router->addRoute('GET', '/transaksi-work-order/get-customer', 'TransaksiWorkOrderController', 'getCustomer');
 $router->addRoute('GET', '/transaksi-work-order/search-vehicles', 'TransaksiWorkOrderController', 'searchVehicles');
 $router->addRoute('GET', '/transaksi-work-order/get-vehicle', 'TransaksiWorkOrderController', 'getVehicle');
+$router->addRoute('GET', '/transaksi-work-order/get-vehicle-by-customer', 'TransaksiWorkOrderController', 'getVehicleByCustomer');
 $router->addRoute('GET', '/transaksi-work-order/search-jasa', 'TransaksiWorkOrderController', 'searchJasa');
 $router->addRoute('GET', '/transaksi-work-order/get-jasa', 'TransaksiWorkOrderController', 'getJasa');
 $router->addRoute('GET', '/transaksi-work-order/search-barang', 'TransaksiWorkOrderController', 'searchBarang');

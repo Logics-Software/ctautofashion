@@ -147,6 +147,30 @@ class TransaksiWorkOrderModel {
     }
     
     /**
+     * Get vehicle by KodeCustomer
+     */
+    public function getVehicleByCustomerCode($kodeCustomer) {
+        try {
+            $sql = "SELECT K.KodeKendaraan, K.NamaKendaraan, K.NoPolisi, K.Tipe, 
+                           K.Tahun, K.Warna, K.KodeMerek, K.KodeJenis, K.KodeCustomer,
+                           M.NamaMerek, J.NamaJenis
+                    FROM FileKendaraan K
+                    LEFT JOIN TabelMerekKendaraan M ON K.KodeMerek = M.KodeMerek
+                    LEFT JOIN TabelJenisKendaraan J ON K.KodeJenis = J.KodeJenis
+                    WHERE K.KodeCustomer = ? AND K.Status = 1";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$kodeCustomer]);
+            
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Error getting vehicle by customer code: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    /**
      * Search montir by KodeMontir or NamaMontir
      */
     public function searchMontir($searchTerm = '') {

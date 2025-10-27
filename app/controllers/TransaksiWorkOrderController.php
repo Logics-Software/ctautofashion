@@ -169,6 +169,25 @@ class TransaksiWorkOrderController {
     }
     
     /**
+     * AJAX: Get vehicle by customer code
+     */
+    public function getVehicleByCustomer() {
+        header('Content-Type: application/json');
+        
+        try {
+            $kodeCustomer = $_GET['customer_code'] ?? '';
+            $vehicle = $this->model->getVehicleByCustomerCode($kodeCustomer);
+            
+            echo json_encode($vehicle ?: []);
+            
+        } catch (Exception $e) {
+            error_log("Error getting vehicle by customer: " . $e->getMessage());
+            echo json_encode([]);
+        }
+        exit();
+    }
+    
+    /**
      * AJAX: Search jasa
      */
     public function searchJasa() {

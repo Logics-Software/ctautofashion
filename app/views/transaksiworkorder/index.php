@@ -1051,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('selectCustomer').addEventListener('change', function(e) {
         const value = e.target.value;
         if (value) {
+            // Get customer info
             fetch(`${basePath}/transaksi-work-order/get-customer?code=${encodeURIComponent(value)}`)
                 .then(response => response.json())
                 .then(customer => {
@@ -1062,6 +1063,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(error => console.error('Error:', error));
+            
+            // Auto-search and select vehicle based on customer code
+            fetch(`${basePath}/transaksi-work-order/get-vehicle-by-customer?customer_code=${encodeURIComponent(value)}`)
+                .then(response => response.json())
+                .then(vehicle => {
+                    if (vehicle && vehicle.KodeKendaraan) {
+                        // Set the vehicle in the select
+                        kendaraanChoice.setChoices([{
+                            value: vehicle.KodeKendaraan,
+                            label: vehicle.NamaKendaraan + ' - ' + vehicle.NoPolisi,
+                            selected: true,
+                            customProperties: vehicle
+                        }], 'value', 'label', true);
+                        
+                        // Trigger change event to display vehicle info
+                        document.getElementById('selectKendaraan').dispatchEvent(new Event('change'));
+                    }
+                })
+                .catch(error => console.error('Error getting vehicle by customer:', error));
         } else {
             document.getElementById('customerInfo').style.display = 'none';
         }
