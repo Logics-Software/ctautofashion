@@ -67,17 +67,33 @@ class ProductModel {
             // Validate sort order
             $sortOrder = strtoupper($sortOrder) === 'DESC' ? 'DESC' : 'ASC';
             
-            // Main query - using string concatenation for OFFSET and FETCH
-            $sql = "SELECT B.KodeBarang, B.NamaBarang, B.Satuan, K.NamaKelompok, J.NamaJenis, M.NamaMerek, B.NamaUkuran, B.HargaBeli, 
-                           B.DiscountBeli, B.HargaPokok, B.HargaJual, B.DiscountJual, B.Status, ISNULL(S.StokAkhir,0) AS StokAkhir
-                    FROM FILEBARANG B 
-                    LEFT JOIN StokBarang S ON B.KodeBarang = S.KodeBarang 
-                    INNER JOIN TABELKELOMPOK K ON B.KodeKelompok = K.KodeKelompok 
-                    INNER JOIN TABELJENIS J ON B.KodeJenis = J.KodeJenis 
-                    INNER JOIN TABELMEREK M ON B.KodeMerek = M.KodeMerek 
-                    WHERE B.Status = 1 AND 1=1 $searchCondition
-                    ORDER BY $sortBy $sortOrder
-                    OFFSET " . (int)$offset . " ROWS FETCH NEXT " . (int)$limit . " ROWS ONLY";
+            // Main query - using ROW_NUMBER() for SQL Server 2008 R2 compatibility
+            // Changed INNER JOIN to LEFT JOIN untuk menghindari data tidak muncul jika referensi kosong
+            $startRow = $offset + 1;
+            $endRow = $offset + $limit;
+            
+            $sql = "WITH ProductData AS (
+                        SELECT 
+                            B.KodeBarang, B.NamaBarang, B.Satuan, 
+                            ISNULL(K.NamaKelompok, '') AS NamaKelompok, 
+                            ISNULL(J.NamaJenis, '') AS NamaJenis, 
+                            ISNULL(M.NamaMerek, '') AS NamaMerek, 
+                            B.NamaUkuran, B.HargaBeli, 
+                            B.DiscountBeli, B.HargaPokok, B.HargaJual, B.DiscountJual, B.Status, 
+                            ISNULL(S.StokAkhir,0) AS StokAkhir,
+                            ROW_NUMBER() OVER (ORDER BY $sortBy $sortOrder) AS RowNum
+                        FROM FILEBARANG B 
+                        LEFT JOIN StokBarang S ON B.KodeBarang = S.KodeBarang 
+                        LEFT JOIN TABELKELOMPOK K ON B.KodeKelompok = K.KodeKelompok 
+                        LEFT JOIN TABELJENIS J ON B.KodeJenis = J.KodeJenis 
+                        LEFT JOIN TABELMEREK M ON B.KodeMerek = M.KodeMerek 
+                        WHERE B.Status = 1 AND 1=1 $searchCondition
+                    )
+                    SELECT KodeBarang, NamaBarang, Satuan, NamaKelompok, NamaJenis, NamaMerek, 
+                           NamaUkuran, HargaBeli, DiscountBeli, HargaPokok, HargaJual, DiscountJual, 
+                           Status, StokAkhir
+                    FROM ProductData
+                    WHERE RowNum BETWEEN $startRow AND $endRow";
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
@@ -136,9 +152,9 @@ class ProductModel {
             $sql = "SELECT COUNT(*) as total
                     FROM FILEBARANG B 
                     LEFT JOIN StokBarang S ON B.KodeBarang = S.KodeBarang 
-                    INNER JOIN TABELKELOMPOK K ON B.KodeKelompok = K.KodeKelompok 
-                    INNER JOIN TABELJENIS J ON B.KodeJenis = J.KodeJenis 
-                    INNER JOIN TABELMEREK M ON B.KodeMerek = M.KodeMerek 
+                    LEFT JOIN TABELKELOMPOK K ON B.KodeKelompok = K.KodeKelompok 
+                    LEFT JOIN TABELJENIS J ON B.KodeJenis = J.KodeJenis 
+                    LEFT JOIN TABELMEREK M ON B.KodeMerek = M.KodeMerek 
                     WHERE B.Status = 1 AND 1=1 $searchCondition";
             
             $stmt = $this->pdo->prepare($sql);
@@ -158,13 +174,18 @@ class ProductModel {
      */
     public function getProductByCode($kodeBarang) {
         try {
-            $sql = "SELECT B.KodeBarang, B.NamaBarang, B.Satuan, K.NamaKelompok, J.NamaJenis, M.NamaMerek, B.NamaUkuran, B.HargaBeli, 
-                           B.DiscountBeli, B.HargaPokok, B.HargaJual, B.DiscountJual, B.Status, ISNULL(S.StokAkhir,0) AS StokAkhir
+            $sql = "SELECT B.KodeBarang, B.NamaBarang, B.Satuan, 
+                           ISNULL(K.NamaKelompok, '') AS NamaKelompok, 
+                           ISNULL(J.NamaJenis, '') AS NamaJenis, 
+                           ISNULL(M.NamaMerek, '') AS NamaMerek, 
+                           B.NamaUkuran, B.HargaBeli, 
+                           B.DiscountBeli, B.HargaPokok, B.HargaJual, B.DiscountJual, B.Status, 
+                           ISNULL(S.StokAkhir,0) AS StokAkhir
                     FROM FILEBARANG B 
                     LEFT JOIN StokBarang S ON B.KodeBarang = S.KodeBarang 
-                    INNER JOIN TABELKELOMPOK K ON B.KodeKelompok = K.KodeKelompok 
-                    INNER JOIN TABELJENIS J ON B.KodeJenis = J.KodeJenis 
-                    INNER JOIN TABELMEREK M ON B.KodeMerek = M.KodeMerek 
+                    LEFT JOIN TABELKELOMPOK K ON B.KodeKelompok = K.KodeKelompok 
+                    LEFT JOIN TABELJENIS J ON B.KodeJenis = J.KodeJenis 
+                    LEFT JOIN TABELMEREK M ON B.KodeMerek = M.KodeMerek 
                     WHERE B.KodeBarang = ?";
             
             $stmt = $this->pdo->prepare($sql);

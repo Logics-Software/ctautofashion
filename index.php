@@ -1,5 +1,9 @@
 <?php
 // Simple MVC Framework
+// Disable error display to prevent breaking JSON responses
+ini_set('display_errors', 0);
+error_reporting(0);
+
 session_start();
 
 // Define base path

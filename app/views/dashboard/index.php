@@ -295,17 +295,25 @@ document.addEventListener('DOMContentLoaded', function() {
         // Status Details
         const statistics = data.statistics;
         
+        // Debug: Log statistics to console
+        console.log('Statistics received:', statistics);
+        console.log('Statistics type:', typeof statistics, 'IsArray:', Array.isArray(statistics));
+        
         // Handle both object and array format
         if (statistics) {
-            // Convert to array of entries for consistent processing
-            const entries = Array.isArray(statistics) 
-                ? statistics.map((item, index) => [index.toString(), item])
-                : Object.entries(statistics);
+            // Define the correct order of statuses
+            const statusOrder = ['0', '1', '2', '3', '4', '5'];
             
-            for (const [statusCode, statusData] of entries) {
+            // Iterate in the correct order
+            for (const statusCode of statusOrder) {
+                const statusData = statistics[statusCode];
+                
                 if (!statusData || typeof statusData !== 'object') {
                     continue;
                 }
+                
+                // Debug: Log each status mapping
+                console.log(`Rendering status ${statusCode}:`, statusData);
                 
                 const percentage = data.total > 0 ? (statusData.count / data.total * 100).toFixed(1) : 0;
                 
@@ -428,13 +436,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get data from PHP
         const chartData = <?php echo json_encode($chartData ?? []); ?>;
         
-        // Check if chartData is empty or null
-        if (!chartData || Object.keys(chartData).length === 0) {
-            return;
-        }
+        // Debug: log chartData
+        console.log('Chart Data:', chartData);
         
-        // Create chart
-        new Chart(ctx, {
+        // Check if chartData is empty or null
+        if (!chartData || Object.keys(chartData).length === 0 || !chartData.months || chartData.months.length === 0) {
+            // Show message instead of empty chart
+            const parent = ctx.parentElement;
+            parent.innerHTML = '<div class="alert alert-info text-center my-5"><i class="fas fa-info-circle me-2"></i>Belum ada data statistik untuk 12 bulan terakhir</div>';
+            console.warn('Chart data is empty or invalid');
+        } else {
+            // Create chart
+            new Chart(ctx, {
             type: 'line',
             data: {
                 labels: chartData.months || [],
@@ -572,6 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+        }
     }
     
     // ===== Revenue Chart =====
@@ -581,10 +595,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get data from PHP
         const revenueData = <?php echo json_encode($revenueData ?? []); ?>;
         
+        // Debug: log revenueData
+        console.log('Revenue Data:', revenueData);
+        
         // Check if revenueData is empty or null
-        if (!revenueData || Object.keys(revenueData).length === 0) {
-            return;
-        }
+        if (!revenueData || Object.keys(revenueData).length === 0 || !revenueData.months || revenueData.months.length === 0) {
+            // Show message instead of empty chart
+            const parent = ctxRevenue.parentElement;
+            parent.innerHTML = '<div class="alert alert-info text-center my-5"><i class="fas fa-info-circle me-2"></i>Belum ada data penjualan untuk 12 bulan terakhir</div>';
+            console.warn('Revenue data is empty or invalid');
+        } else {
         
         // Function to format currency
         const formatRupiah = (amount) => {
@@ -731,6 +751,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+        }
     }
 });
 </script>

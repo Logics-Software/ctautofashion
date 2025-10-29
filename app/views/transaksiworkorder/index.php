@@ -148,7 +148,7 @@
 
                                 <!-- Keterangan -->
                                 <div class="col-md-8 mb-2">
-                                    <label class="form-label">Keterangan</label>
+                                    <label class="form-label">Keluhan/Keterangan</label>
                                     <input type="text" class="form-control" id="inputKeterangan" name="Keterangan" value="">
                                 </div>
                             </div>
@@ -960,12 +960,26 @@ document.addEventListener('DOMContentLoaded', function() {
             loadCustomers(searchTerm);
         }
     });
+    
+    // Load customers when dropdown opens (initial load)
+    document.getElementById('selectCustomer').addEventListener('showDropdown', function(e) {
+        if (customerChoice._currentState.choices.length === 0) {
+            loadCustomers(''); // Load with empty search to get all results
+        }
+    });
 
     // Load vehicles on search
     document.getElementById('selectKendaraan').addEventListener('search', function(e) {
         const searchTerm = e.detail.value;
         if (searchTerm.length >= 2) {
             loadVehicles(searchTerm);
+        }
+    });
+    
+    // Load vehicles when dropdown opens (initial load)
+    document.getElementById('selectKendaraan').addEventListener('showDropdown', function(e) {
+        if (kendaraanChoice._currentState.choices.length === 0) {
+            loadVehicles(''); // Load with empty search to get all results
         }
     });
 
@@ -976,12 +990,26 @@ document.addEventListener('DOMContentLoaded', function() {
             loadMontir(searchTerm);
         }
     });
+    
+    // Load montir when dropdown opens (initial load)
+    document.getElementById('selectMontir').addEventListener('showDropdown', function(e) {
+        if (montirChoice._currentState.choices.length === 0) {
+            loadMontir(''); // Load with empty search to get all results
+        }
+    });
 
     // Load picker on search
     document.getElementById('selectPicker').addEventListener('search', function(e) {
         const searchTerm = e.detail.value;
         if (searchTerm.length >= 1) {
             loadPicker(searchTerm);
+        }
+    });
+    
+    // Load picker when dropdown opens (initial load)
+    document.getElementById('selectPicker').addEventListener('showDropdown', function(e) {
+        if (pickerChoice._currentState.choices.length === 0) {
+            loadPicker(''); // Load with empty search to get all results
         }
     });
     
@@ -1099,6 +1127,36 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('kendaraanMerek').textContent = vehicle.NamaMerek || '-';
                         document.getElementById('kendaraanModel').textContent = vehicle.NamaJenis || '-';
                         document.getElementById('kendaraanTipe').textContent = vehicle.Tipe || '-';
+                        
+                        // Auto-fill customer if vehicle has KodeCustomer and customer field is empty
+                        const currentCustomer = document.getElementById('selectCustomer').value;
+                        if (vehicle.KodeCustomer && !currentCustomer) {
+                            console.log('Auto-filling customer from vehicle:', vehicle.KodeCustomer);
+                            
+                            // Fetch customer data
+                            fetch(`${basePath}/transaksi-work-order/get-customer?code=${encodeURIComponent(vehicle.KodeCustomer)}`)
+                                .then(response => response.json())
+                                .then(customer => {
+                                    if (customer && customer.KodeCustomer) {
+                                        // Set customer in Choices.js dropdown
+                                        customerChoice.setChoices([{
+                                            value: customer.KodeCustomer,
+                                            label: customer.NamaCustomer,
+                                            selected: true
+                                        }], 'value', 'label', true);
+                                        
+                                        // Trigger change event to display customer info
+                                        document.getElementById('selectCustomer').dispatchEvent(new Event('change'));
+                                        
+                                        // Show info message
+                                        console.log('Customer auto-filled:', customer.NamaCustomer);
+                                        
+                                        // Show notification to user
+                                        showAlert(`Customer otomatis terisi: ${customer.NamaCustomer}`, 'info');
+                                    }
+                                })
+                                .catch(error => console.error('Error auto-filling customer:', error));
+                        }
                         document.getElementById('kendaraanTahun').textContent = vehicle.Tahun || '-';
                         document.getElementById('kendaraanWarna').textContent = vehicle.Warna || '-';
                         document.getElementById('kendaraanInfo').style.display = 'block';
@@ -1169,6 +1227,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Load picker function
+    function loadPicker(searchTerm) {
+        fetch(`${basePath}/transaksi-work-order/search-picker?term=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    const choices = data.results.map(item => ({
+                        value: item.id,
+                        label: item.text,
+                        customProperties: item.data
+                    }));
+
+                    // Clear existing choices first
+                    pickerChoice.clearChoices();
+
+                    // Set new choices
+                    pickerChoice.setChoices(choices, 'value', 'label', true);
+                } else {
+                    pickerChoice.clearChoices();
+                }
+            })
+            .catch(error => console.error('Error loading picker:', error));
+    }
+    
     // Load Kota List for Add Customer Modal from TabelKota (Status = 1)
     function loadKotaList() {
         fetch(`${basePath}/transaksi-work-order/get-kota-list`)
@@ -2398,6 +2479,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `${basePath}/transaksi-work-order/save`;
         
         // Send AJAX request
+        console.log('Sending request to:', endpoint);
+        console.log('Form data:', formData);
+        
         fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -2405,8 +2489,30 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify(formData)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+            
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // Clone response to check content before parsing
+            return response.clone().text().then(text => {
+                console.log('Raw response:', text);
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Response text:', text);
+                    throw new Error('Invalid JSON response from server');
+                }
+            });
+        })
         .then(data => {
+            console.log('Parsed data:', data);
+            
             if (data.success) {
                 // Close modal
                 confirmSaveModal.hide();
@@ -2434,8 +2540,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showAlert('Terjadi kesalahan saat menyimpan data', 'danger');
+            console.error('Fetch error:', error);
+            console.error('Error message:', error.message);
+            showAlert('Terjadi kesalahan saat menyimpan data: ' + error.message, 'danger');
             btnConfirm.disabled = false;
             btnConfirm.innerHTML = isEditMode ? 
                 '<i class="fa-solid fa-save me-2"></i>Ya, Update' : 

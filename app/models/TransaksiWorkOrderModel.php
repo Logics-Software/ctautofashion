@@ -1132,7 +1132,13 @@ class TransaksiWorkOrderModel {
             // Delete existing details
             $this->pdo->prepare("DELETE FROM DetailOrderJasa WHERE NoOrder = ?")->execute([$noOrder]);
             $this->pdo->prepare("DELETE FROM DetailOrderBarang WHERE NoOrder = ?")->execute([$noOrder]);
-            $this->pdo->prepare("DELETE FROM StokOrder WHERE NoOrder = ?")->execute([$noOrder]);
+            
+            // Delete StokOrder with explicit check
+            $sqlDeleteStok = "DELETE FROM StokOrder WHERE NoOrder = ?";
+            $stmtDeleteStok = $this->pdo->prepare($sqlDeleteStok);
+            $stmtDeleteStok->execute([$noOrder]);
+            $deletedRows = $stmtDeleteStok->rowCount();
+            error_log("Deleted $deletedRows rows from StokOrder for NoOrder: $noOrder");
             
             // Insert detail jasa
             $sqlJasa = "INSERT INTO DetailOrderJasa 
@@ -1163,10 +1169,21 @@ class TransaksiWorkOrderModel {
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtBarang = $this->pdo->prepare($sqlBarang);
             
-            $sqlStokOrder = "INSERT INTO StokOrder 
-                            (NoOrder, KodeBarang, TahunProduksi, Jumlah)
-                            VALUES (?, ?, ?, ?)";
+            // Use MERGE statement to avoid duplicate key error in StokOrder
+            $sqlStokOrder = "MERGE INTO StokOrder AS target
+                            USING (SELECT ? AS NoOrder, ? AS KodeBarang, ? AS TahunProduksi, ? AS Jumlah) AS source
+                            ON target.NoOrder = source.NoOrder 
+                               AND target.KodeBarang = source.KodeBarang 
+                               AND target.TahunProduksi = source.TahunProduksi
+                            WHEN MATCHED THEN
+                                UPDATE SET Jumlah = source.Jumlah
+                            WHEN NOT MATCHED THEN
+                                INSERT (NoOrder, KodeBarang, TahunProduksi, Jumlah)
+                                VALUES (source.NoOrder, source.KodeBarang, source.TahunProduksi, source.Jumlah);";
             $stmtStokOrder = $this->pdo->prepare($sqlStokOrder);
+            
+            // Track processed items to prevent duplicates
+            $processedItems = [];
             
             foreach ($data['DetailBarang'] as $index => $barang) {
                 $discountRupiah = ($barang['HargaSatuan'] * $barang['Jumlah']) * ($barang['Discount'] / 100);
@@ -1186,13 +1203,25 @@ class TransaksiWorkOrderModel {
                     $index + 1
                 ]);
                 
-                // Insert stok order
-                $stmtStokOrder->execute([
-                    $noOrder,
-                    $barang['KodeBarang'],
-                    '-',
-                    $barang['Jumlah']
-                ]);
+                // Create unique key for this item
+                $itemKey = $barang['KodeBarang'] . '-';
+                
+                // Only insert to StokOrder if not already processed (prevent duplicates)
+                if (!isset($processedItems[$itemKey])) {
+                    $processedItems[$itemKey] = $barang['Jumlah'];
+                    
+                    // Insert or update stok order using MERGE
+                    $stmtStokOrder->execute([
+                        $noOrder,
+                        $barang['KodeBarang'],
+                        '-',
+                        $barang['Jumlah']
+                    ]);
+                } else {
+                    // If duplicate item exists, accumulate quantity
+                    $processedItems[$itemKey] += $barang['Jumlah'];
+                    error_log("Duplicate item found: {$barang['KodeBarang']}, accumulating quantity");
+                }
             }
             
             // Update FileKendaraan - KodeCustomer

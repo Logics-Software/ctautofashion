@@ -29,8 +29,15 @@ class DashboardController {
         $chartData = null;
         $revenueData = null;
         if ((int)$tipe_user >= 2) {
+            error_log("Getting monthly statistics for user with TipeUser: " . $tipe_user);
             $chartData = $this->workOrderModel->getMonthlyStatistics();
             $revenueData = $this->workOrderModel->getMonthlyRevenue();
+            
+            // Debug log
+            error_log("Chart Data from Controller: " . json_encode($chartData));
+            error_log("Revenue Data from Controller: " . json_encode($revenueData));
+        } else {
+            error_log("Skipping monthly statistics - TipeUser: " . $tipe_user);
         }
         
         // Get order statistics by status (default: today)
@@ -54,6 +61,14 @@ class DashboardController {
      * AJAX endpoint to get order statistics by period
      */
     public function getOrderStats() {
+        header('Content-Type: application/json');
+        
+        // Check if user is logged in (for AJAX, return JSON error)
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['error' => 'Not authenticated', 'statistics' => null, 'total' => 0]);
+            exit;
+        }
+        
         // Check if it's an AJAX request
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
@@ -61,22 +76,27 @@ class DashboardController {
             return;
         }
         
-        // Get POST data
-        $period = $_POST['period'] ?? 'today';
-        $startDate = $_POST['start_date'] ?? null;
-        $endDate = $_POST['end_date'] ?? null;
-        
-        // Get user info from session
-        $user_id = $_SESSION['user_id'];
-        $user_data = $_SESSION['user_data'] ?? [];
-        $tipe_user = $_SESSION['tipe_user'] ?? $user_data['TipeUser'] ?? null;
-        
-        // Get statistics (filtered by UserID if Operator/Staff)
-        $orderStats = $this->workOrderModel->getOrderStatistics($period, $startDate, $endDate, $user_id, $tipe_user);
-        
-        // Return JSON response
-        header('Content-Type: application/json');
-        echo json_encode($orderStats);
+        try {
+            // Get POST data
+            $period = $_POST['period'] ?? 'today';
+            $startDate = $_POST['start_date'] ?? null;
+            $endDate = $_POST['end_date'] ?? null;
+            
+            // Get user info from session
+            $user_id = $_SESSION['user_id'];
+            $user_data = $_SESSION['user_data'] ?? [];
+            $tipe_user = $_SESSION['tipe_user'] ?? $user_data['TipeUser'] ?? null;
+            
+            // Get statistics (filtered by UserID if Operator/Staff)
+            $orderStats = $this->workOrderModel->getOrderStatistics($period, $startDate, $endDate, $user_id, $tipe_user);
+            
+            // Return JSON response
+            echo json_encode($orderStats);
+        } catch (Exception $e) {
+            error_log("Error getting order stats: " . $e->getMessage());
+            echo json_encode(['error' => $e->getMessage(), 'statistics' => null, 'total' => 0]);
+        }
+        exit;
     }
     
     /**

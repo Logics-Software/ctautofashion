@@ -52,7 +52,7 @@ $title = 'Informasi Transaksi Work Order';
                         <button class="btn btn-sm btn-outline-primary" type="submit">
                             <i class="fas fa-search"></i> Cari
                         </button>
-                        <?php if (!empty($filters['search']) || !empty($filters['status']) || !empty($filters['customer']) || !empty($filters['no_polisi'])): ?>
+                        <?php if (!empty($filters['search']) || $filters['status'] !== '' || !empty($filters['customer']) || !empty($filters['no_polisi'])): ?>
                             <a href="?" class="btn btn-outline-secondary">
                                 <i class="fas fa-times"></i> Reset
                             </a>
@@ -118,12 +118,17 @@ $title = 'Informasi Transaksi Work Order';
                         <div class="col-md-6">
                             <label for="status" class="form-label">Status Order</label>
                             <select name="status" id="status" class="form-select" onchange="submitFilter()">
-                                <option value="">Semua Status</option>
-                                <?php foreach ($statusOptions as $value => $label): ?>
-                                    <option value="<?php echo $value; ?>" <?php echo $filters['status'] == $value ? 'selected' : ''; ?>>
-                                        <?php echo $label; ?>
+                                <?php 
+                                // Debug: uncomment to see filter value
+                                // echo "<!-- Current filter status: '" . htmlspecialchars($filters['status']) . "' -->";
+                                foreach ($statusOptions as $value => $label): 
+                                    $isSelected = (string)$filters['status'] === (string)$value;
+                                ?>
+                                    <option value="<?php echo htmlspecialchars($value); ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($label); ?>
                                     </option>
                                 <?php endforeach; ?>
+                                <option value="" <?php echo $filters['status'] === '' ? 'selected' : ''; ?>>Semua Status</option>
                             </select>
                         </div>
                         
@@ -242,7 +247,7 @@ $title = 'Informasi Transaksi Work Order';
                         $activeFilters[] = "Periode: <strong>" . date('d/m/Y', strtotime($startDate)) . " - " . date('d/m/Y', strtotime($endDate)) . "</strong>";
                     }
                     
-                    if (!empty($filters['status'])) {
+                    if ($filters['status'] !== '') {
                         $activeFilters[] = "Status: <strong>" . htmlspecialchars($statusOptions[$filters['status']]) . "</strong>";
                     }
                     if (!empty($filters['customer'])) {
@@ -762,7 +767,8 @@ function submitFilter() {
     // Create URL with all parameters
     const params = new URLSearchParams();
     for (let [key, value] of formData.entries()) {
-        if (value) {
+        // Check if value is not empty string (but allow "0")
+        if (value !== '') {
             params.append(key, value);
         }
     }
@@ -779,7 +785,8 @@ function submitCustomDate() {
     // Create URL with all parameters
     const params = new URLSearchParams();
     for (let [key, value] of formData.entries()) {
-        if (value) {
+        // Check if value is not empty string (but allow "0")
+        if (value !== '') {
             params.append(key, value);
         }
     }

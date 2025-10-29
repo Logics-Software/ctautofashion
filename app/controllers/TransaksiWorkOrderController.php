@@ -80,6 +80,12 @@ class TransaksiWorkOrderController {
     public function searchCustomers() {
         header('Content-Type: application/json');
         
+        // Check if user is logged in (for AJAX, return JSON error)
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['results' => [], 'error' => 'Not authenticated']);
+            exit;
+        }
+        
         try {
             $searchTerm = $_GET['term'] ?? '';
             $customers = $this->model->searchCustomers($searchTerm);
@@ -126,6 +132,12 @@ class TransaksiWorkOrderController {
      */
     public function searchVehicles() {
         header('Content-Type: application/json');
+        
+        // Check if user is logged in (for AJAX, return JSON error)
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['results' => [], 'error' => 'Not authenticated']);
+            exit;
+        }
         
         try {
             $searchTerm = $_GET['term'] ?? '';
@@ -323,6 +335,12 @@ class TransaksiWorkOrderController {
     public function searchMontir() {
         header('Content-Type: application/json');
         
+        // Check if user is logged in (for AJAX, return JSON error)
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['results' => [], 'error' => 'Not authenticated']);
+            exit;
+        }
+        
         try {
             $searchTerm = $_GET['term'] ?? '';
             $montirList = $this->model->searchMontir($searchTerm);
@@ -369,6 +387,12 @@ class TransaksiWorkOrderController {
      */
     public function searchPicker() {
         header('Content-Type: application/json');
+        
+        // Check if user is logged in (for AJAX, return JSON error)
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['results' => [], 'error' => 'Not authenticated']);
+            exit;
+        }
         
         try {
             $searchTerm = $_GET['term'] ?? '';

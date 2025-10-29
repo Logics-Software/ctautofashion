@@ -38,8 +38,8 @@ class WorkOrderModel {
                 $params[] = $userID;
             }
             
-            // Status filter
-            if (!empty($filters['status'])) {
+            // Status filter - Use isset and !== '' to allow "0" value
+            if (isset($filters['status']) && $filters['status'] !== '') {
                 $sql .= " AND H.StatusOrder = ?";
                 $params[] = $filters['status'];
             }
@@ -126,8 +126,8 @@ class WorkOrderModel {
                 $params[] = $userID;
             }
             
-            // Status filter
-            if (!empty($filters['status'])) {
+            // Status filter - Use isset and !== '' to allow "0" value
+            if (isset($filters['status']) && $filters['status'] !== '') {
                 $sql .= " AND H.StatusOrder = ?";
                 $params[] = $filters['status'];
             }
@@ -407,6 +407,9 @@ class WorkOrderModel {
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Debug: Log raw results from database
+            error_log("Order Statistics Raw Results: " . print_r($results, true));
+            
             // Initialize all statuses with 0
             $statistics = [
                 '0' => ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'],
@@ -420,40 +423,49 @@ class WorkOrderModel {
             // Fill in the actual counts
             foreach ($results as $row) {
                 $status = (string)$row['StatusOrder'];
+                // Trim whitespace that might exist in database
+                $status = trim($status);
+                
+                // Debug: Log each status mapping
+                error_log("Mapping status: '" . $status . "' => count: " . $row['TotalOrder']);
+                
                 if (isset($statistics[$status])) {
                     $statistics[$status]['count'] = (int)$row['TotalOrder'];
+                } else {
+                    // Log unknown status
+                    error_log("WARNING: Unknown status '" . $status . "' found in database");
                 }
             }
             
             // Calculate total
             $total = array_sum(array_column($statistics, 'count'));
             
-            // Force statistics to be encoded as JSON object, not array
-            // Convert to stdClass to ensure JSON encoding as object
-            $statisticsObject = new \stdClass();
-            foreach ($statistics as $key => $value) {
-                $statisticsObject->$key = $value;
-            }
+            // Debug: Log final statistics before return
+            error_log("Final Statistics Array: " . print_r($statistics, true));
+            error_log("Total: " . $total);
             
+            // Return statistics as associative array (not stdClass)
+            // This ensures key ordering is maintained
             return [
-                'statistics' => $statisticsObject,
+                'statistics' => $statistics,
                 'total' => $total
             ];
             
         } catch (PDOException $e) {
             error_log("Error getting order statistics: " . $e->getMessage());
             
-            // Force statistics to be encoded as JSON object, not array
-            $statisticsObject = new \stdClass();
-            $statisticsObject->{'0'} = ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'];
-            $statisticsObject->{'1'} = ['status' => 'Sedang diproses', 'count' => 0, 'color' => 'info'];
-            $statisticsObject->{'2'} = ['status' => 'Proses Selesai', 'count' => 0, 'color' => 'warning'];
-            $statisticsObject->{'3'} = ['status' => 'Faktur dibuat', 'count' => 0, 'color' => 'primary'];
-            $statisticsObject->{'4'} = ['status' => 'Telah dibayar', 'count' => 0, 'color' => 'success'];
-            $statisticsObject->{'5'} = ['status' => 'Dibatalkan', 'count' => 0, 'color' => 'danger'];
+            // Return empty statistics as associative array
+            $statistics = [
+                '0' => ['status' => 'Belum diproses', 'count' => 0, 'color' => 'secondary'],
+                '1' => ['status' => 'Sedang diproses', 'count' => 0, 'color' => 'info'],
+                '2' => ['status' => 'Proses Selesai', 'count' => 0, 'color' => 'warning'],
+                '3' => ['status' => 'Faktur dibuat', 'count' => 0, 'color' => 'primary'],
+                '4' => ['status' => 'Telah dibayar', 'count' => 0, 'color' => 'success'],
+                '5' => ['status' => 'Dibatalkan', 'count' => 0, 'color' => 'danger']
+            ];
             
             return [
-                'statistics' => $statisticsObject,
+                'statistics' => $statistics,
                 'total' => 0
             ];
         }
@@ -465,49 +477,59 @@ class WorkOrderModel {
     public function getMonthlyRevenue() {
         try {
             // Query untuk total seluruh penjualan per bulan
+            // Using CONVERT for SQL Server compatibility
             $sqlTotal = "SELECT 
-                            FORMAT(J.TanggalPenjualan, 'yyyy-MM') as Bulan,
+                            CONVERT(VARCHAR(7), J.TanggalPenjualan, 120) as Bulan,
                             SUM(J.TotalPenjualan) as TotalPenjualan
                         FROM HeaderPenjualan J
                         WHERE J.TanggalPenjualan >= DATEADD(MONTH, -12, GETDATE())
-                        GROUP BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')
-                        ORDER BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')";
+                        GROUP BY CONVERT(VARCHAR(7), J.TanggalPenjualan, 120)
+                        ORDER BY CONVERT(VARCHAR(7), J.TanggalPenjualan, 120)";
             
             $stmtTotal = $this->pdo->prepare($sqlTotal);
             $stmtTotal->execute();
             $totalResults = $stmtTotal->fetchAll(PDO::FETCH_ASSOC);
             
+            // Debug log
+            error_log("Total Revenue Query Results: " . print_r($totalResults, true));
+            
             // Query untuk penjualan customer perorangan (JenisCustomer = 0)
             $sqlPerorangan = "SELECT 
-                                FORMAT(J.TanggalPenjualan, 'yyyy-MM') as Bulan,
+                                CONVERT(VARCHAR(7), J.TanggalPenjualan, 120) as Bulan,
                                 SUM(J.TotalPenjualan) as TotalPenjualan
                             FROM HeaderPenjualan J
                             INNER JOIN FileCustomer C ON J.KodeCustomer = C.KodeCustomer
                             INNER JOIN FileJenisCustomer JC ON C.KodeCustomer = JC.KodeCustomer
                             WHERE J.TanggalPenjualan >= DATEADD(MONTH, -12, GETDATE())
                               AND JC.JenisCustomer = 0
-                            GROUP BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')
-                            ORDER BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')";
+                            GROUP BY CONVERT(VARCHAR(7), J.TanggalPenjualan, 120)
+                            ORDER BY CONVERT(VARCHAR(7), J.TanggalPenjualan, 120)";
             
             $stmtPerorangan = $this->pdo->prepare($sqlPerorangan);
             $stmtPerorangan->execute();
             $peroranganResults = $stmtPerorangan->fetchAll(PDO::FETCH_ASSOC);
             
+            // Debug log
+            error_log("Perorangan Revenue Query Results: " . print_r($peroranganResults, true));
+            
             // Query untuk penjualan customer perusahaan (JenisCustomer = 1)
             $sqlPerusahaan = "SELECT 
-                                FORMAT(J.TanggalPenjualan, 'yyyy-MM') as Bulan,
+                                CONVERT(VARCHAR(7), J.TanggalPenjualan, 120) as Bulan,
                                 SUM(J.TotalPenjualan) as TotalPenjualan
                             FROM HeaderPenjualan J
                             INNER JOIN FileCustomer C ON J.KodeCustomer = C.KodeCustomer
                             INNER JOIN FileJenisCustomer JC ON C.KodeCustomer = JC.KodeCustomer
                             WHERE J.TanggalPenjualan >= DATEADD(MONTH, -12, GETDATE())
                               AND JC.JenisCustomer = 1
-                            GROUP BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')
-                            ORDER BY FORMAT(J.TanggalPenjualan, 'yyyy-MM')";
+                            GROUP BY CONVERT(VARCHAR(7), J.TanggalPenjualan, 120)
+                            ORDER BY CONVERT(VARCHAR(7), J.TanggalPenjualan, 120)";
             
             $stmtPerusahaan = $this->pdo->prepare($sqlPerusahaan);
             $stmtPerusahaan->execute();
             $perusahaanResults = $stmtPerusahaan->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug log
+            error_log("Perusahaan Revenue Query Results: " . print_r($perusahaanResults, true));
             
             // Prepare data for chart - ensure we have 12 months
             $months = [];
@@ -560,15 +582,21 @@ class WorkOrderModel {
                 }
             }
             
-            return [
+            $result = [
                 'months' => $months,
                 'totalRevenue' => $totalRevenue,
                 'peroranganRevenue' => $peroranganRevenue,
                 'perusahaanRevenue' => $perusahaanRevenue
             ];
             
+            // Debug log
+            error_log("Monthly Revenue Result: " . print_r($result, true));
+            
+            return $result;
+            
         } catch (PDOException $e) {
             error_log("Error getting monthly revenue: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             
             // Return empty data structure
             $months = [];
@@ -591,20 +619,24 @@ class WorkOrderModel {
     public function getMonthlyStatistics() {
         try {
             // Get data for the last 12 months
+            // Using CONVERT for SQL Server compatibility
             $sql = "SELECT 
-                        FORMAT(H.TanggalOrder, 'yyyy-MM') as Bulan,
+                        CONVERT(VARCHAR(7), H.TanggalOrder, 120) as Bulan,
                         COUNT(DISTINCT H.NoOrder) as TotalOrder,
                         SUM(CASE WHEN H.StatusOrder = '4' THEN 1 ELSE 0 END) as OrderSelesai,
                         SUM(CASE WHEN H.StatusOrder = '5' THEN 1 ELSE 0 END) as OrderBatal
                     FROM HeaderOrder H
                     WHERE H.TanggalOrder >= DATEADD(MONTH, -12, GETDATE())
-                    GROUP BY FORMAT(H.TanggalOrder, 'yyyy-MM')
-                    ORDER BY FORMAT(H.TanggalOrder, 'yyyy-MM')";
+                    GROUP BY CONVERT(VARCHAR(7), H.TanggalOrder, 120)
+                    ORDER BY CONVERT(VARCHAR(7), H.TanggalOrder, 120)";
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug log
+            error_log("Monthly Statistics Query Results: " . print_r($results, true));
             
             // Prepare data for chart - ensure we have 12 months
             $months = [];
@@ -637,15 +669,21 @@ class WorkOrderModel {
                 }
             }
             
-            return [
+            $result = [
                 'months' => $months,
                 'totalOrders' => $totalOrders,
                 'completedOrders' => $completedOrders,
                 'canceledOrders' => $canceledOrders
             ];
             
+            // Debug log
+            error_log("Monthly Statistics Result: " . print_r($result, true));
+            
+            return $result;
+            
         } catch (PDOException $e) {
             error_log("Error getting monthly statistics: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             
             // Return empty data structure
             $months = [];
