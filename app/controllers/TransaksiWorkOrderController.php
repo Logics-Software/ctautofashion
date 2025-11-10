@@ -857,7 +857,12 @@ class TransaksiWorkOrderController {
             $this->generatePDF($detail);
             
         } catch (Exception $e) {
+            error_log("[downloadPDF] Exception: " . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
             echo "Terjadi kesalahan: " . $e->getMessage();
+            exit;
+        } catch (\Throwable $t) {
+            error_log("[downloadPDF] Error: " . $t->getMessage() . ' in ' . $t->getFile() . ':' . $t->getLine());
+            echo "Terjadi kesalahan: " . $t->getMessage();
             exit;
         }
     }
@@ -866,216 +871,342 @@ class TransaksiWorkOrderController {
      * Generate PDF from work order data
      */
     private function generatePDF($detail) {
-        $dompdfPath = BASE_PATH . '/libs/dompdf/autoload.inc.php';
-        
-        if (!file_exists($dompdfPath)) {
-            die("DomPDF not found!");
+        $autoloadPath = BASE_PATH . '/vendor/autoload.php';
+        $fpdfLibPath = BASE_PATH . '/libs/fpdf/fpdf.php';
+
+        if (file_exists($autoloadPath)) {
+            require_once $autoloadPath;
+        } elseif (file_exists($fpdfLibPath)) {
+            require_once $fpdfLibPath;
+        } else {
+            die("Library FPDF tidak ditemukan. Install dengan `composer require setasign/fpdf` atau letakkan library pada `libs/fpdf`.");
         }
-        
-        require_once $dompdfPath;
+
+        if (!class_exists('\FPDF') && !class_exists('FPDF')) {
+            die("Kelas FPDF tidak tersedia. Pastikan library sudah ter-load.");
+        }
         
         $header = $detail['header'];
         $jasa = $detail['jasa'] ?? [];
         $barang = $detail['barang'] ?? [];
-        
-        // Get HTML content
-        $pdfHtml = $this->getPDFHTMLContent($header, $jasa, $barang);
-        
-        // Initialize DomPDF with options
-        $options = new \Dompdf\Options();
-        $options->set('isHtml5ParserEnabled', true);
-        $options->set('isRemoteEnabled', false);
-        $options->set('defaultFont', 'DejaVu Sans');
-        
-        $dompdf = new \Dompdf\Dompdf($options);
-        $dompdf->loadHtml($pdfHtml);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        
-        $filename = 'NotaWorkOrder_' . $header['NoOrder'] . '_' . date('Ymd_His') . '.pdf';
-        $dompdf->stream($filename, ['Attachment' => true]);
-        exit;
+
+        $this->generatePDFUsingFPDF($header, $jasa, $barang);
     }
-    
+
     /**
-     * Get PDF HTML Content
+     * Convert UTF-8 text to Latin compatible encoding for FPDF
      */
-    private function getPDFHTMLContent($header, $jasa, $barang) {
-        // Get signature
-        $sig = $header['TandaTanganCustomer'] ?? null;
-        
-        // Build HTML with string concatenation
-        $html = '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: DejaVu Sans, Arial, sans-serif; padding: 10px; font-size: 10pt; }
-        p {
-            margin: 0;
+    private function convertToLatin($text) {
+        $text = $text ?? '';
+        $converted = @iconv('UTF-8', 'windows-1252//TRANSLIT', $text);
+        if ($converted === false) {
+            return $text;
         }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; line-height: 1.2; }
-        .header h1 { margin: 0 0 5px 0; font-size: 16pt; font-weight: bold; }
-        .info-section { margin-bottom: 15px; line-height: 1; }
-        .info-table { width: 100%; border-collapse: collapse; }
-        .info-table td { padding: 3px; font-size: 9pt; }
-        .info-table td:first-child { width: 30%; font-weight: bold; }
-        .section-title { font-size: 12pt; font-weight: bold; margin-top: 15px; margin-bottom: 5px; }
-        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .data-table th { background-color: #717578; color: white; padding: 6px 4px; text-align: center; border: 1px solid #000; font-size: 9pt; }
-        .data-table td { padding: 5px 4px; border: 1px solid #666; font-size: 9pt; }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .total-section { margin-top: 0px; float: right; width: 300px; line-height: 1; }
-        .total-section table { width: 100%; }
-        .total-section td { padding: 4px 8px; font-size: 9pt; }
-        .grand-total { font-weight: bold; font-size: 11pt; border-top: 2px solid #000; }
-        .signature-section { margin-top: 50px; text-align: right; page-break-inside: avoid; clear: both; }
-        .signature-box { display: inline-block; text-align: center; min-width: 250px; }
-        .signature-img { border: 1px solid #000; max-width: 250px; height: auto; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>WORK ORDER</h1>
-        <p><strong>No. Order: ' . htmlspecialchars($header['NoOrder']) . '</strong></p>
-        <p>Tanggal: ' . date('d/m/Y', strtotime($header['TanggalOrder'])) . '</p>
-    </div>
-    
-    <div class="info-section">
-        <table class="info-table">
-            <tr><td>Customer</td><td>: ' . htmlspecialchars($header['NamaCustomer'] ?? '-') . '</td></tr>
-            <tr><td>Alamat</td><td>: ' . htmlspecialchars($header['AlamatCustomer'] ?? '-') . '</td></tr>
-            <tr><td>Kota</td><td>: ' . htmlspecialchars($header['Kota'] ?? '-') . '</td></tr>
-            <tr><td>No. Telepon</td><td>: ' . htmlspecialchars($header['NoTelepon'] ?? '-') . '</td></tr>
-            <tr><td>Kendaraan</td><td>: ' . htmlspecialchars($header['NamaKendaraan'] ?? '-') . '</td></tr>
-            <tr><td>No. Polisi</td><td>: ' . htmlspecialchars($header['NoPolisi'] ?? '-') . '</td></tr>
-            <tr><td>Warna</td><td>: ' . htmlspecialchars($header['Warna'] ?? '-') . '</td></tr>
-            <tr><td>Tahun</td><td>: ' . htmlspecialchars($header['Tahun'] ?? '-') . '</td></tr>
-            <tr><td>Marketing</td><td>: ' . htmlspecialchars($header['NamaPicker'] ?? '-') . '</td></tr>
-            <tr><td>Montir</td><td>: ' . htmlspecialchars($header['NamaMontir'] ?? '-') . '</td></tr>
-        </table>
-    </div>';
-        
-        // JASA Section
+        return $converted;
+    }
+
+    /**
+     * Resolve signature path for embedding into PDF
+     */
+    private function resolveSignaturePath($path) {
+        if (empty($path)) {
+            return null;
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+
+        $normalized = ltrim($path, '/');
+        $fullPath = BASE_PATH . '/' . $normalized;
+        if (file_exists($fullPath)) {
+            return $fullPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate PDF using FPDF library
+     */
+    private function generatePDFUsingFPDF($header, $jasa, $barang) {
+        $fpdfClass = class_exists('\FPDF') ? '\FPDF' : 'FPDF';
+
+        try {
+            $pdf = new $fpdfClass();
+        } catch (\Throwable $e) {
+            die("Gagal menginisialisasi FPDF: " . $e->getMessage());
+        }
+
+        $pdf->SetTitle($this->convertToLatin('Nota Work Order ' . ($header['NoOrder'] ?? '')));
+        $pdf->SetAuthor('ctautofashion');
+        $pdf->SetCreator('ctautofashion');
+
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->AddPage();
+
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, $this->convertToLatin('WORK ORDER'), 0, 1, 'C');
+
+        $pdf->SetFont('Arial', '', 11);
+        $pdf->Cell(0, 6, $this->convertToLatin('No. Order: ' . ($header['NoOrder'] ?? '-')), 0, 1, 'C');
+        $tanggalOrder = !empty($header['TanggalOrder']) ? date('d/m/Y', strtotime($header['TanggalOrder'])) : '-';
+        $pdf->Cell(0, 6, $this->convertToLatin('Tanggal: ' . $tanggalOrder), 0, 1, 'C');
+        $pdf->Ln(3);
+
+        $pdf->SetFont('Arial', 'B', 11);
+        $pdf->Cell(0, 7, $this->convertToLatin('Informasi Customer & Kendaraan'), 0, 1);
+        $pdf->Ln(1);
+
+        $pdf->SetFont('Arial', '', 9);
+        $infoPairs = [
+            'Customer' => $header['NamaCustomer'] ?? '-',
+            'Alamat' => $header['AlamatCustomer'] ?? '-',
+            'No. Telepon' => $header['NoTelepon'] ?? '-',
+            'Kendaraan' => $header['NamaKendaraan'] . ' - ' . $header['NoPolisi'] ?? '-',
+            'Marketing' => $header['NamaPicker'] . '       Mekanik: ' . $header['NamaMontir'] ?? '-',
+        ];
+
+        foreach ($infoPairs as $label => $value) {
+            $pdf->Cell(40, 6, $this->convertToLatin($label), 0, 0);
+            $pdf->Cell(3, 6, ':', 0, 0);
+            $pdf->MultiCell(0, 6, $this->convertToLatin($value));
+        }
+
         if (!empty($jasa)) {
-            $html .= '
-    <div class="section-title">JASA/SERVICE</div>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 35%;">Nama Jasa</th>
-                <th style="width: 20%;">Kategori</th>
-                <th style="width: 8%;">Satuan</th>
-                <th style="width: 8%;">QTY</th>
-                <th style="width: 12%;">Harga</th>
-                <th style="width: 12%;">Total</th>
-            </tr>
-        </thead>
-        <tbody>';
-            
+            $pdf->Ln(3);
+            $pdf->SetFont('Arial', 'B', 11);
+            $pdf->Cell(0, 7, $this->convertToLatin('JASA / SERVICE'), 0, 1);
+
+            $pdf->SetFont('Arial', 'B', 9);
+            $pdf->SetFillColor(113, 117, 120);
+            $pdf->SetTextColor(255);
+            $pdf->Cell(10, 7, 'No', 1, 0, 'C', true);
+            $pdf->Cell(65, 7, $this->convertToLatin('Nama Jasa'), 1, 0, 'L', true);
+            $pdf->Cell(30, 7, $this->convertToLatin('Kategori'), 1, 0, 'L', true);
+            $pdf->Cell(15, 7, $this->convertToLatin('Sat.'), 1, 0, 'C', true);
+            $pdf->Cell(15, 7, $this->convertToLatin('Qty'), 1, 0, 'C', true);
+            $pdf->Cell(25, 7, $this->convertToLatin('Harga'), 1, 0, 'R', true);
+            $pdf->Cell(30, 7, $this->convertToLatin('Total'), 1, 1, 'R', true);
+
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->SetTextColor(0);
             $no = 1;
             foreach ($jasa as $item) {
-                $html .= '
-            <tr>
-                <td class="text-center">' . $no++ . '</td>
-                <td>' . htmlspecialchars($item['NamaJasa'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($item['NamaKategori'] ?? '-') . '</td>
-                <td class="text-center">' . htmlspecialchars($item['Satuan'] ?? '-') . '</td>
-                <td class="text-center">' . (int)($item['Jumlah'] ?? 0) . '</td>
-                <td class="text-right">' . number_format($item['HargaSatuan'] ?? 0, 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format($item['TotalHarga'] ?? 0, 0, ',', '.') . '</td>
-            </tr>';
+                $this->renderWrappedRow($pdf, [
+                    ['width' => 10, 'text' => $no++, 'align' => 'C'],
+                    ['width' => 65, 'text' => $item['NamaJasa'] ?? '-', 'align' => 'L'],
+                    ['width' => 30, 'text' => $item['NamaKategori'] ?? '-', 'align' => 'L'],
+                    ['width' => 15, 'text' => $item['Satuan'] ?? '-', 'align' => 'C'],
+                    ['width' => 15, 'text' => (int) ($item['Jumlah'] ?? 0), 'align' => 'C'],
+                    ['width' => 25, 'text' => number_format($item['HargaSatuan'] ?? 0, 0, ',', '.'), 'align' => 'R'],
+                    ['width' => 30, 'text' => number_format($item['TotalHarga'] ?? 0, 0, ',', '.'), 'align' => 'R'],
+                ],5);
             }
-            
-            $html .= '
-        </tbody>
-    </table>';
         }
-        
-        // BARANG Section
+
         if (!empty($barang)) {
-            $html .= '
-    <div class="section-title">BARANG/SPARE PART</div>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 30%;">Nama Barang</th>
-                <th style="width: 15%;">Merek</th>
-                <th style="width: 8%;">Satuan</th>
-                <th style="width: 8%;">QTY</th>
-                <th style="width: 12%;">Harga</th>
-                <th style="width: 12%;">Total</th>
-            </tr>
-        </thead>
-        <tbody>';
-            
+            $pdf->Ln(3);
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 7, $this->convertToLatin('BARANG / SPARE PART'), 0, 1);
+
+            $pdf->SetFont('Arial', 'B', 9);
+            $pdf->SetFillColor(113, 117, 120);
+            $pdf->SetTextColor(255);
+            $pdf->Cell(10, 7, 'No', 1, 0, 'C', true);
+            $pdf->Cell(70, 7, $this->convertToLatin('Nama Barang'), 1, 0, 'L', true);
+            $pdf->Cell(25, 7, $this->convertToLatin('Merek'), 1, 0, 'L', true);
+            $pdf->Cell(15, 7, $this->convertToLatin('Sat.'), 1, 0, 'C', true);
+            $pdf->Cell(15, 7, $this->convertToLatin('Qty'), 1, 0, 'C', true);
+            $pdf->Cell(25, 7, $this->convertToLatin('Harga'), 1, 0, 'R', true);
+            $pdf->Cell(30, 7, $this->convertToLatin('Total'), 1, 1, 'R', true);
+
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->SetTextColor(0);
             $no = 1;
             foreach ($barang as $item) {
-                $html .= '
-            <tr>
-                <td class="text-center">' . $no++ . '</td>
-                <td>' . htmlspecialchars($item['NamaBarang'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($item['NamaMerek'] ?? '-') . '</td>
-                <td class="text-center">' . htmlspecialchars($item['Satuan'] ?? '-') . '</td>
-                <td class="text-center">' . (int)($item['Jumlah'] ?? 0) . '</td>
-                <td class="text-right">' . number_format($item['HargaSatuan'] ?? 0, 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format($item['TotalHarga'] ?? 0, 0, ',', '.') . '</td>
-            </tr>';
+                $this->renderWrappedRow($pdf, [
+                    ['width' => 10, 'text' => $no++, 'align' => 'C'],
+                    ['width' => 70, 'text' => $item['NamaBarang'] ?? '-', 'align' => 'L'],
+                    ['width' => 25, 'text' => $item['NamaMerek'] ?? '-', 'align' => 'L'],
+                    ['width' => 15, 'text' => $item['Satuan'] ?? '-', 'align' => 'C'],
+                    ['width' => 15, 'text' => (int) ($item['Jumlah'] ?? 0), 'align' => 'C'],
+                    ['width' => 25, 'text' => number_format($item['HargaSatuan'] ?? 0, 0, ',', '.'), 'align' => 'R'],
+                    ['width' => 30, 'text' => number_format($item['TotalHarga'] ?? 0, 0, ',', '.'), 'align' => 'R'],
+                ],5);
             }
-            
-            $html .= '
-        </tbody>
-    </table>';
         }
-        
-        // Total Section
-        $html .= '
-    <div class="total-section">
-        <table>
-            <tr>
-                <td>Total Jasa</td>
-                <td>:</td>
-                <td class="text-right"><strong>Rp ' . number_format($header['TotalJasa'] ?? 0, 0, ',', '.') . '</strong></td>
-            </tr>
-            <tr>
-                <td>Total Barang</td>
-                <td>:</td>
-                <td class="text-right"><strong>Rp ' . number_format($header['TotalBarang'] ?? 0, 0, ',', '.') . '</strong></td>
-            </tr>
-            <tr class="grand-total">
-                <td>TOTAL ORDER</td>
-                <td>:</td>
-                <td class="text-right" style="color: #c00;">Rp ' . number_format($header['TotalOrder'] ?? 0, 0, ',', '.') . '</td>
-            </tr>
-        </table>
-    </div>
-    
-    <div class="signature-section">
-        <div class="signature-box">
-            <p><strong>Menyetujui,</strong></p>
-            <div style="margin: 20px 0;">';
-        
-        // Add customer signature if available
+
+        $pdf->Ln(4);
+        $pdf->SetFont('Arial', 'B', 11);
+        $pdf->Cell(0, 7, $this->convertToLatin('Ringkasan Total'), 0, 1);
+
+        $pdf->SetFont('Arial', '', 9);
+        $pdf->Cell(50, 7, $this->convertToLatin('Total Jasa'), 1, 0);
+        $pdf->Cell(0, 7, $this->convertToLatin('Rp ' . number_format($header['TotalJasa'] ?? 0, 0, ',', '.')), 1, 1, 'R');
+        $pdf->Cell(50, 7, $this->convertToLatin('Total Barang'), 1, 0);
+        $pdf->Cell(0, 7, $this->convertToLatin('Rp ' . number_format($header['TotalBarang'] ?? 0, 0, ',', '.')), 1, 1, 'R');
+
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(50, 7, $this->convertToLatin('TOTAL ORDER'), 1, 0);
+        $pdf->Cell(0, 7, $this->convertToLatin('Rp ' . number_format($header['TotalOrder'] ?? 0, 0, ',', '.')), 1, 1, 'R');
+
+        $pdf->Ln(4);
+        $pdf->SetFont('Arial', '', 9);
+        $pdf->Cell(0, 6, $this->convertToLatin('Menyetujui,'), 0, 1, 'R');
+        $pdf->Ln(10);
+
+        $sig = $header['TandaTanganCustomer'] ?? null;
+        $signaturePrinted = false;
         if (!empty($sig)) {
-            $html .= '<img src="' . $sig . '" class="signature-img" alt="Signature" />';
-        } else {
-            $html .= '<p style="color: #999;">(Belum ada tanda tangan)</p>';
+            $signaturePath = $this->resolveSignaturePath($sig);
+            if ($signaturePath) {
+                try {
+                    $currentX = $pdf->GetX();
+                    $currentY = $pdf->GetY();
+                    $pdf->Image($signaturePath, $currentX + 130, $currentY - 18, 40);
+                    $signaturePrinted = true;
+                } catch (\Throwable $e) {
+                    // Ignore image errors and fallback to text
+                }
+            }
         }
-        
-        $html .= '
-            </div>
-            <p>Customer</p>
-        </div>
-    </div>
-</body>
-</html>';
-        
-        return $html;
+
+        if (!$signaturePrinted) {
+            $pdf->Cell(0, 6, $this->convertToLatin(''), 0, 1, 'R');
+        }
+
+        $pdf->Ln(10);
+        $pdf->Cell(0, 6, $this->convertToLatin('Customer'), 0, 1, 'R');
+
+        $filename = 'NotaWorkOrder_' . $header['NoOrder'] . '_' . date('Ymd_His') . '.pdf';
+        $pdf->Output($filename, 'D');
+        exit;
+    }
+
+    /**
+     * Render a table row with wrapped cells and uniform height
+     */
+    private function renderWrappedRow($pdf, array $columns, $lineHeight = 7)
+    {
+        $prepared = [];
+        $maxLines = 1;
+
+        foreach ($columns as $column) {
+            $width = $column['width'] ?? 0;
+            $align = $column['align'] ?? 'L';
+            $text = $this->convertToLatin((string) ($column['text'] ?? ''));
+
+            $lineCount = $this->calculateLineCount($pdf, $width, $text);
+            $maxLines = max($maxLines, $lineCount);
+
+            $prepared[] = [
+                'width' => $width,
+                'align' => $align,
+                'text' => $text,
+            ];
+        }
+
+        $rowHeight = $lineHeight * $maxLines;
+        $bottomMargin = $this->getPrivateValue($pdf, 'bMargin', 0);
+        $pageHeight = method_exists($pdf, 'GetPageHeight') ? $pdf->GetPageHeight() : 297; // default A4 height
+        $pageBreak = $this->getPrivateValue($pdf, 'PageBreakTrigger', $pageHeight - $bottomMargin);
+
+        if ($pdf->GetY() + $rowHeight > $pageBreak) {
+            $pdf->AddPage($pdf->GetPageOrientation());
+        }
+
+        foreach ($prepared as $spec) {
+            $x = $pdf->GetX();
+            $y = $pdf->GetY();
+
+            $pdf->Rect($x, $y, $spec['width'], $rowHeight);
+            $pdf->MultiCell($spec['width'], $lineHeight, $spec['text'], 0, $spec['align']);
+            $pdf->SetXY($x + $spec['width'], $y);
+        }
+
+        $pdf->Ln($rowHeight);
+    }
+
+    /**
+     * Calculate number of lines required for given text and width
+     */
+    private function calculateLineCount($pdf, $width, $text)
+    {
+        if ($width <= 0) {
+            return 1;
+        }
+
+        $text = str_replace("\r", '', $text);
+        $len = strlen($text);
+        if ($len > 0 && $text[$len - 1] === "\n") {
+            $len--;
+        }
+
+        $currentFont = $this->getPrivateValue($pdf, 'CurrentFont', []);
+        $cw = is_array($currentFont) && isset($currentFont['cw']) ? $currentFont['cw'] : [];
+
+        $cMargin = $this->getPrivateValue($pdf, 'cMargin', 0);
+        $fontSize = $this->getPrivateValue($pdf, 'FontSize', 12);
+        $wMax = ($width - 2 * $cMargin) * 1000 / max(1, $fontSize);
+
+        $sep = -1;
+        $i = 0;
+        $j = 0;
+        $lineLength = 0;
+        $numLines = 1;
+
+        while ($i < $len) {
+            $char = $text[$i];
+            if ($char === "\n") {
+                $i++;
+                $sep = -1;
+                $j = $i;
+                $lineLength = 0;
+                $numLines++;
+                continue;
+            }
+
+            if ($char === ' ') {
+                $sep = $i;
+            }
+
+            $lineLength += $cw[$char] ?? 0;
+
+            if ($lineLength > $wMax) {
+                if ($sep === -1) {
+                    if ($i === $j) {
+                        $i++;
+                    }
+                } else {
+                    $i = $sep + 1;
+                }
+                $sep = -1;
+                $j = $i;
+                $lineLength = 0;
+                $numLines++;
+            } else {
+                $i++;
+            }
+        }
+
+        return max(1, $numLines);
     }
     
+    private function getPrivateValue($object, $property, $default = null)
+    {
+        try {
+            $reflection = new \ReflectionClass($object);
+            if ($reflection->hasProperty($property)) {
+                $prop = $reflection->getProperty($property);
+                $prop->setAccessible(true);
+                return $prop->getValue($object);
+            }
+        } catch (\Throwable $ignored) {
+        }
+        return $default;
+    }
+
     /**
      * Helper: Redirect
      */
@@ -1085,5 +1216,3 @@ class TransaksiWorkOrderController {
         header('Location: ' . $fullPath);
     }
 }
-?>
-
