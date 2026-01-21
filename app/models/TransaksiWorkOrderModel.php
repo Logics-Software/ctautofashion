@@ -782,6 +782,25 @@ class TransaksiWorkOrderModel {
                 $data['KodeCustomer']
             ]);
             
+            // 6. Insert KartuOrder with default values
+            $sqlKartuOrder = "INSERT INTO KartuOrder 
+                             (NoOrder, UserID, ProsesUserID, BatalUserID, BatalTanggal, 
+                              FakturUserID, FakturTanggal, BayarUserID, BayarTanggal)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            $stmtKartuOrder = $this->pdo->prepare($sqlKartuOrder);
+            $stmtKartuOrder->execute([
+                $noOrder,
+                $_SESSION['user_id'],           // User = UserID
+                '',                             // ProsesUser = ''
+                '',                             // BatalUserID = ''
+                '1900/01/01',                   // BatalTanggal = '01/01/1900'
+                '',                             // FakturUserID = ''
+                '1900/01/01',                   // FakturTanggal = '01/01/1900'
+                '',                             // BayarUserID = ''
+                '1900/01/01'                    // BayarTanggal = '01/01/1900'
+            ]);
+            
             // Commit transaction
             $this->pdo->commit();
             
@@ -1253,6 +1272,37 @@ class TransaksiWorkOrderModel {
                 'success' => false,
                 'error' => 'Gagal mengupdate work order: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Add work order to print queue (DataCetakOrder)
+     */
+    public function insertPrintQueue($noOrder) {
+        try {
+            // Check if entry already exists to prevent duplicates
+            $sqlCheck = "SELECT COUNT(*) as count FROM DataCetakOrder WHERE NoOrder = ?";
+            $stmtCheck = $this->pdo->prepare($sqlCheck);
+            $stmtCheck->execute([$noOrder]);
+            $result = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result['count'] > 0) {
+                // Already exists, update status to 0
+                $sqlUpdate = "UPDATE DataCetakOrder SET StatusCetak = 0 WHERE NoOrder = ?";
+                $stmtUpdate = $this->pdo->prepare($sqlUpdate);
+                $stmtUpdate->execute([$noOrder]);
+            } else {
+                // Insert new
+                $sqlInsert = "INSERT INTO DataCetakOrder (NoOrder, StatusCetak) VALUES (?, 0)";
+                $stmtInsert = $this->pdo->prepare($sqlInsert);
+                $stmtInsert->execute([$noOrder]);
+            }
+            
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("Error inserting print queue: " . $e->getMessage());
+            return false;
         }
     }
 }

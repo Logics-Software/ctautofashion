@@ -541,8 +541,8 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa-solid fa-times me-2"></i>Tutup
                     </button>
-                    <button type="button" class="btn btn-danger" id="btnDownloadPDF" onclick="downloadWorkOrderPDF()" style="display: none;">
-                        <i class="fa-solid fa-file-pdf me-2"></i>Work Order (PDF)
+                    <button type="button" class="btn btn-danger" id="btnPrintWorkOrder" style="display: none;">
+                        <i class="fa-solid fa-print me-2"></i>Cetak Work Order
                     </button>
                     <button type="button" class="btn btn-primary" id="btnEditWorkOrder" onclick="editWorkOrder()" style="display: none;">
                         <i class="fa-solid fa-edit me-2"></i>Edit Work Order
@@ -599,26 +599,7 @@
                     </table>
                 </div>
                 
-                <!-- Signature Section -->
-                <div class="border rounded p-3 bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label fw-bold mb-0">
-                            <i class="fa-solid fa-signature me-2"></i>Tanda Tangan Customer <span class="text-danger">*</span>
-                        </label>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearSignature">
-                            <i class="fa-solid fa-eraser me-1"></i>Hapus
-                        </button>
-                    </div>
-                    <div class="signature-container" style="border: 2px dashed #ccc; border-radius: 8px; background: #fafafa; position: relative;">
-                        <canvas id="signatureCanvas" width="700" height="200" style="display: block; width: 100%; cursor: crosshair; touch-action: none;"></canvas>
-                        <div id="signaturePlaceholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; pointer-events: none; font-size: 14px;">
-                            <i class="fa-solid fa-pen-nib me-2"></i>Tanda tangan di sini
-                        </div>
-                    </div>
-                    <small class="text-muted">
-                        <i class="fa-solid fa-info-circle me-1"></i>Silakan tanda tangan menggunakan mouse atau touchscreen
-                    </small>
-                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -1041,8 +1022,8 @@ document.addEventListener('DOMContentLoaded', function() {
         keyboard: true
     });
     
-    // Initialize Signature Pad
-    initializeSignaturePad();
+    // Initialize Modals
+
     
     // Flag to track if cancel was confirmed
     let cancelConfirmed = false;
@@ -2427,12 +2408,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnConfirmSave').addEventListener('click', function() {
         const btnConfirm = this;
         
-        // Validate signature
-        const signature = getSignatureData();
-        if (!signature) {
-            alert('Tanda tangan customer wajib diisi!\nSilakan tanda tangan di area yang tersedia.');
-            return;
-        }
+
         
         btnConfirm.disabled = true;
         
@@ -2465,7 +2441,7 @@ document.addEventListener('DOMContentLoaded', function() {
             TotalOrder: totalOrder,
             DetailJasa: detailJasaData,
             DetailBarang: detailBarangData,
-            TandaTangan: signature
+            TandaTangan: null
         };
         
         // Add NoOrder if edit mode
@@ -2517,20 +2493,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Close modal
                 confirmSaveModal.hide();
                 
-                // Show success modal
-                const successTitle = isEditMode ? 'Work Order berhasil diupdate!' : 'Work Order berhasil disimpan!';
-                showSuccessModal(successTitle, 'No Order: ' + data.NoOrder);
-                
                 // Reset edit mode
                 currentEditNoOrder = '';
-                
-                // Enable btnNewOrder
                 document.getElementById('btnNewOrder').disabled = false;
                 
-                // Redirect after 2 seconds
-                setTimeout(() => {
-                    window.location.href = `${basePath}/transaksi-work-order`;
-                }, 2000);
+                // Show Print Confirmation
+                showPrintConfirmModal(data.NoOrder, 
+                    // On Yes
+                    function() {
+                        fetch(`${basePath}/transaksi-work-order/save-print-queue`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ NoOrder: data.NoOrder })
+                        })
+                        .then(res => res.json())
+                        .then(printData => {
+                             const successTitle = isEditMode ? 'Work Order berhasil diupdate!' : 'Work Order berhasil disimpan!';
+                             const msg = printData.success ? 'Berhasil masuk antrian cetak.' : 'Gagal masuk antrian cetak.';
+                             showSuccessModal(successTitle, 'No Order: ' + data.NoOrder + '<br><small>' + msg + '</small>');
+                             
+                             setTimeout(() => {
+                                 window.location.href = `${basePath}/transaksi-work-order`;
+                             }, 2000);
+                        })
+                        .catch(err => {
+                             console.error(err);
+                             window.location.href = `${basePath}/transaksi-work-order`;
+                        });
+                    },
+                    // On No
+                    function() {
+                        const successTitle = isEditMode ? 'Work Order berhasil diupdate!' : 'Work Order berhasil disimpan!';
+                        showSuccessModal(successTitle, 'No Order: ' + data.NoOrder);
+                        
+                        setTimeout(() => {
+                             window.location.href = `${basePath}/transaksi-work-order`;
+                        }, 2000);
+                    }
+                );
             } else {
                 showAlert('Gagal menyimpan work order: ' + (data.error || 'Unknown error'), 'danger');
                 btnConfirm.disabled = false;
@@ -2609,6 +2609,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     };
     
+    // Helper function to show print confirmation modal
+    window.showPrintConfirmModal = function(noOrder, onYes, onNo) {
+        const modalHtml = `
+            <div class="modal fade" id="printConfirmModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title"><i class="fa-solid fa-print me-2"></i>Konfirmasi Cetak</h5>
+                        </div>
+                        <div class="modal-body text-center py-4">
+                            <i class="fa-solid fa-question-circle text-primary mb-3" style="font-size: 3rem;"></i>
+                            <h5>Apakah akan mencetak Work order?</h5>
+                            <p class="text-muted">No Order: ${noOrder}</p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary px-4" id="btnPrintNo">Tidak</button>
+                            <button type="button" class="btn btn-primary px-4" id="btnPrintYes">Ya, Cetak</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove old modal if exists
+        const oldModal = document.getElementById('printConfirmModal');
+        if (oldModal) oldModal.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modalEl = document.getElementById('printConfirmModal');
+        const modal = new bootstrap.Modal(modalEl, {backdrop: 'static', keyboard: false});
+        
+        document.getElementById('btnPrintYes').addEventListener('click', () => {
+            modal.hide();
+            if (typeof onYes === 'function') onYes();
+        });
+        
+        document.getElementById('btnPrintNo').addEventListener('click', () => {
+            modal.hide();
+            if (typeof onNo === 'function') onNo();
+        });
+        
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            modalEl.remove();
+        });
+        
+        modal.show();
+    };
+
     // Helper function to show success modal (inside DOMContentLoaded for access to basePath)
     window.showSuccessModal = function(title, message) {
         const modalHtml = `
@@ -2645,135 +2693,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
-// ============================================
-// SIGNATURE PAD FUNCTIONS
-// ============================================
 
-let signatureCanvas, signatureContext;
-let isDrawing = false;
-let signatureData = null;
 
-function initializeSignaturePad() {
-    signatureCanvas = document.getElementById('signatureCanvas');
-    signatureContext = signatureCanvas.getContext('2d');
-    
-    // Set canvas dimensions properly
-    const container = signatureCanvas.parentElement;
-    signatureCanvas.width = 700;
-    signatureCanvas.height = 200;
-    
-    // Set drawing styles
-    signatureContext.strokeStyle = '#000';
-    signatureContext.lineWidth = 2;
-    signatureContext.lineCap = 'round';
-    signatureContext.lineJoin = 'round';
-    
-    // Mouse events
-    signatureCanvas.addEventListener('mousedown', startDrawing);
-    signatureCanvas.addEventListener('mousemove', draw);
-    signatureCanvas.addEventListener('mouseup', stopDrawing);
-    signatureCanvas.addEventListener('mouseout', stopDrawing);
-    
-    // Touch events for mobile
-    signatureCanvas.addEventListener('touchstart', handleTouchStart, {passive: false});
-    signatureCanvas.addEventListener('touchmove', handleTouchMove, {passive: false});
-    signatureCanvas.addEventListener('touchend', stopDrawing);
-    
-    // Clear signature button
-    document.getElementById('btnClearSignature').addEventListener('click', clearSignature);
-    
-    // Reset signature when modal is shown
-    document.getElementById('confirmSaveModal').addEventListener('shown.bs.modal', function() {
-        clearSignature();
-    });
-}
-
-function startDrawing(e) {
-    isDrawing = true;
-    const rect = signatureCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    signatureContext.beginPath();
-    signatureContext.moveTo(x, y);
-    
-    // Hide placeholder when drawing starts
-    document.getElementById('signaturePlaceholder').style.display = 'none';
-}
-
-function draw(e) {
-    if (!isDrawing) return;
-    
-    const rect = signatureCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    signatureContext.lineTo(x, y);
-    signatureContext.stroke();
-}
-
-function stopDrawing() {
-    if (isDrawing) {
-        isDrawing = false;
-        signatureContext.closePath();
-        
-        // Save signature data
-        signatureData = signatureCanvas.toDataURL('image/png');
-    }
-}
-
-function handleTouchStart(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const mouseEvent = new MouseEvent('mousedown', {
-        clientX: touch.clientX,
-        clientY: touch.clientY
-    });
-    signatureCanvas.dispatchEvent(mouseEvent);
-}
-
-function handleTouchMove(e) {
-    e.preventDefault();
-    if (!isDrawing) return;
-    
-    const touch = e.touches[0];
-    const rect = signatureCanvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    
-    signatureContext.lineTo(x, y);
-    signatureContext.stroke();
-}
-
-function clearSignature() {
-    signatureContext.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-    signatureData = null;
-    document.getElementById('signaturePlaceholder').style.display = 'block';
-}
-
-function getSignatureData() {
-    // Check if canvas is empty
-    const imageData = signatureContext.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height);
-    const data = imageData.data;
-    let isEmpty = true;
-    
-    for (let i = 0; i < data.length; i += 4) {
-        if (data[i + 3] !== 0) {
-            isEmpty = false;
-            break;
-        }
-    }
-    
-    if (isEmpty) {
-        return null;
-    }
-    
-    return signatureCanvas.toDataURL('image/png');
-}
-
-// ============================================
-// END SIGNATURE PAD FUNCTIONS
-// ============================================
 
 // Show Work Order Detail Modal
 function showWorkOrderDetail(noOrder) {
@@ -2861,7 +2782,43 @@ function showWorkOrderDetail(noOrder) {
             const statusOrder = parseInt(data.header.StatusOrder) || 0;
             const detailModalFooter = document.getElementById('detailModalFooter');
             const btnEditWorkOrder = document.getElementById('btnEditWorkOrder');
-            const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+            const btnPrintWorkOrder = document.getElementById('btnPrintWorkOrder');
+            
+            // Set print button handler
+            btnPrintWorkOrder.onclick = function() {
+                detailModal.hide(); // Hide detail modal
+                showPrintConfirmModal(noOrder, 
+                    // On Yes
+                    function() {
+                        fetch(`${basePath}/transaksi-work-order/save-print-queue`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ NoOrder: noOrder })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                             const msg = data.success ? 'Berhasil masuk antrian cetak.' : 'Gagal masuk antrian cetak.';
+                             showSuccessModal('Cetak Work Order', 'No Order: ' + noOrder + '<br><small>' + msg + '</small>');
+                             
+                             setTimeout(() => {
+                                 window.location.reload();
+                             }, 2000);
+                        })
+                        .catch(err => {
+                             console.error(err);
+                             alert('Terjadi kesalahan saat memproses permintaan cetak.');
+                        });
+                    },
+                    // On No
+                    function() {
+                        detailModal.show(); // Show detail modal again if cancelled? Or just do nothing.
+                        // Actually, user said "confirmation to print". If No, maybe just stay closed or re-open detail.
+                        // Let's re-open detail modal if they validly cancelled, but usually "No" just closes the confirm modal.
+                        // If I hid detail modal before, I should probably show it back if they say No.
+                        detailModal.show();
+                    }
+                );
+            };
             
             // Show footer if StatusOrder <= 2 (untuk download PDF atau edit)
             if (statusOrder <= 2) {
@@ -2875,9 +2832,9 @@ function showWorkOrderDetail(noOrder) {
                     btnEditWorkOrder.style.display = 'none';
                 }
                 
-                // Show download PDF button for StatusOrder <= 2
-                btnDownloadPDF.setAttribute('data-noorder', data.header.NoOrder);
-                btnDownloadPDF.style.display = 'inline-block';
+                // Show print button for StatusOrder <= 2
+                btnPrintWorkOrder.setAttribute('data-noorder', data.header.NoOrder);
+                btnPrintWorkOrder.style.display = 'inline-block';
             } else {
                 // Hide footer for StatusOrder > 2
                 detailModalFooter.style.display = 'none';

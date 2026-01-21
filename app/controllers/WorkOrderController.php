@@ -224,9 +224,16 @@ class WorkOrderController {
                 echo "Data Work Order tidak ditemukan";
                 exit;
             }
-            
-            // Generate PDF content
-            $this->generatePDF($detail);
+            // Render printable HTML view (use browser Print to create PDF)
+            $viewFile = BASE_PATH . '/app/views/workorder/print.php';
+            if (file_exists($viewFile)) {
+                extract(['detail' => $detail]);
+                include $viewFile;
+                exit;
+            } else {
+                echo "View not found: workorder/print";
+                exit;
+            }
             
         } catch (Exception $e) {
             echo "Terjadi kesalahan: " . $e->getMessage();

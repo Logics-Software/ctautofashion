@@ -50,9 +50,9 @@ $title = 'Dashboard';
                 <div class="card">
                     <div class="card-body card-hover-success text-center">
                         <i class="fas fa-list-check fa-3x text-success mb-3"></i>
-                        <h5 class="card-title fw-bold">Daftar Data Work Order</h5>
+                        <h5 class="card-title fw-bold">Informasi Data Work Order</h5>
                         <a href="<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>/workorder" class="btn btn-success btn">
-                            <i class="fas fa-clipboard-check me-2"></i>Data Work Order
+                            <i class="fas fa-clipboard-check me-2"></i>Informasi Data Work Order
                         </a>
                     </div>
                 </div>

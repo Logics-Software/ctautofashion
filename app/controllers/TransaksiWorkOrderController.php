@@ -211,10 +211,16 @@ class TransaksiWorkOrderController {
             
             // Format for Select2
             $results = array_map(function($jasa) {
+                $harga = isset($jasa['Harga']) ? number_format((float)$jasa['Harga'], 0, ',', '.') : '0';
+                $label = $jasa['NamaJasa'] . ' | Rp ' . $harga;
+
+                $data = $jasa;
+                $data['Tarif'] = isset($jasa['Harga']) ? (float)$jasa['Harga'] : 0;
+
                 return [
                     'id' => $jasa['KodeJasa'],
-                    'text' => $jasa['NamaJasa'],
-                    'data' => $jasa
+                    'text' => $label,
+                    'data' => $data
                 ];
             }, $jasaList);
             
@@ -258,10 +264,27 @@ class TransaksiWorkOrderController {
             
             // Format for Select2
             $results = array_map(function($barang) {
+                // Attempt to get stock for each barang (fallback to 0)
+                $stok = 0;
+                try {
+                    $stok = $this->model->getStokBarang($barang['KodeBarang']);
+                } catch (Exception $e) {
+                    $stok = 0;
+                }
+
+                // Format price
+                $harga = isset($barang['HargaJual']) ? number_format((float)$barang['HargaJual'], 0, ',', '.') : '0';
+
+                $label = $barang['NamaBarang'] . ' | Stok: ' . $stok . ' | Rp ' . $harga;
+
+                // Include stok in data payload as well
+                $data = $barang;
+                $data['StokTersedia'] = $stok;
+
                 return [
                     'id' => $barang['KodeBarang'],
-                    'text' => $barang['NamaBarang'],
-                    'data' => $barang
+                    'text' => $label,
+                    'data' => $data
                 ];
             }, $barangList);
             
@@ -468,6 +491,10 @@ class TransaksiWorkOrderController {
                 throw new Exception('Minimal harus ada 1 detail jasa atau barang');
             }
             
+            // Signature is no longer required
+            $data['TandaTangan'] = null;
+
+            
             // Save to database
             $result = $this->model->saveWorkOrder($data);
             
@@ -481,6 +508,48 @@ class TransaksiWorkOrderController {
             ]);
         }
         exit();
+    }
+    
+    /**
+     * Save signature from data URL to file
+     */
+    private function saveSignature($dataUrl) {
+        try {
+            // Parse data URL
+            if (strpos($dataUrl, 'data:image/png;base64,') !== 0) {
+                throw new Exception('Invalid signature format');
+            }
+            
+            // Extract base64 data
+            $base64Data = substr($dataUrl, strlen('data:image/png;base64,'));
+            $imageData = base64_decode($base64Data);
+            
+            if ($imageData === false) {
+                throw new Exception('Failed to decode signature data');
+            }
+            
+            // Create uploads directory if not exists
+            $uploadsDir = BASE_PATH . '/uploads/signatures';
+            if (!is_dir($uploadsDir)) {
+                mkdir($uploadsDir, 0755, true);
+            }
+            
+            // Generate unique filename
+            $filename = 'signature_' . time() . '_' . uniqid() . '.png';
+            $filepath = $uploadsDir . '/' . $filename;
+            
+            // Save file
+            if (file_put_contents($filepath, $imageData) === false) {
+                throw new Exception('Failed to save signature file');
+            }
+            
+            // Return relative path for storage in database
+            return '/uploads/signatures/' . $filename;
+            
+        } catch (Exception $e) {
+            error_log("Error saving signature: " . $e->getMessage());
+            return null;
+        }
     }
     
     /**
@@ -669,6 +738,8 @@ class TransaksiWorkOrderController {
                 ]);
                 exit();
             }
+            
+
             
             // Update work order
             $result = $this->model->updateWorkOrder($noOrder, $data, $userID);
@@ -1205,6 +1276,42 @@ class TransaksiWorkOrderController {
         } catch (\Throwable $ignored) {
         }
         return $default;
+    }
+
+    /**
+     * AJAX: Save to print queue
+     */
+    public function savePrintQueue() {
+        header('Content-Type: application/json');
+        
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+            
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $noOrder = $data['NoOrder'] ?? '';
+            
+            if (empty($noOrder)) {
+                throw new Exception('NoOrder is required');
+            }
+            
+            $success = $this->model->insertPrintQueue($noOrder);
+            
+            echo json_encode([
+                'success' => $success,
+                'message' => $success ? 'Berhasil ditambahkan ke antrian cetak' : 'Gagal menambahkan ke antrian cetak'
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error saving print queue: " . $e->getMessage());
+            echo json_encode([
+                'success' => false, 
+                'error' => $e->getMessage()
+            ]);
+        }
+        exit();
     }
 
     /**
