@@ -784,15 +784,18 @@ class TransaksiWorkOrderModel {
             
             // 6. Insert KartuOrder with default values
             $sqlKartuOrder = "INSERT INTO KartuOrder 
-                             (NoOrder, UserID, ProsesUserID, BatalUserID, BatalTanggal, 
+                             (NoOrder, UserID, ProsesUserID, ProsesTanggal, SelesaiUserID, SelesaiTanggal, BatalUserID, BatalTanggal, 
                               FakturUserID, FakturTanggal, BayarUserID, BayarTanggal)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             $stmtKartuOrder = $this->pdo->prepare($sqlKartuOrder);
             $stmtKartuOrder->execute([
                 $noOrder,
                 $_SESSION['user_id'],           // User = UserID
-                '',                             // ProsesUser = ''
+                '',                             // ProsesUserID = ''
+                '1900-01-01',                   // ProsesTanggal = '1900-01-01'
+                '',                             // SelesaiUserID = ''
+                '1900-01-01',                   // SelesaiTanggal = '1900-01-01'
                 '',                             // BatalUserID = ''
                 '1900/01/01',                   // BatalTanggal = '01/01/1900'
                 '',                             // FakturUserID = ''
@@ -1256,6 +1259,14 @@ class TransaksiWorkOrderModel {
                 $data['KodeKendaraan'],
                 $data['KodeCustomer']
             ]);
+
+            // Update KartuOrder to ensure no NULL values
+            $sqlKartuOrder = "UPDATE KartuOrder SET 
+                                ProsesTanggal = ISNULL(ProsesTanggal, '1900-01-01'),
+                                SelesaiUserID = ISNULL(SelesaiUserID, ''),
+                                SelesaiTanggal = ISNULL(SelesaiTanggal, '1900-01-01')
+                              WHERE NoOrder = ?";
+            $this->pdo->prepare($sqlKartuOrder)->execute([$noOrder]);
             
             $this->pdo->commit();
             
