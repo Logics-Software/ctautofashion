@@ -16,8 +16,9 @@ class TransaksiWorkOrderModel {
             $prefix = "SP-$yearMonth";
             
             // Cari nomor terakhir dengan prefix yang sama
+            // Gunakan UPDLOCK dan HOLDLOCK untuk mencegah race condition/crash saat multiple user input
             $sql = "SELECT TOP 1 NoOrder 
-                    FROM HeaderOrder 
+                    FROM HeaderOrder WITH (UPDLOCK, HOLDLOCK)
                     WHERE NoOrder LIKE ? 
                     ORDER BY NoOrder DESC";
             
@@ -306,7 +307,8 @@ class TransaksiWorkOrderModel {
      */
     public function generateKodeCustomer() {
         try {
-            $sql = "SELECT TOP 1 KodeCustomer FROM FileCustomer 
+            // Gunakan UPDLOCK dan HOLDLOCK (harus dipanggil dalam transaction)
+            $sql = "SELECT TOP 1 KodeCustomer FROM FileCustomer WITH (UPDLOCK, HOLDLOCK)
                     WHERE KodeCustomer LIKE 'CS%' 
                     ORDER BY KodeCustomer DESC";
             $stmt = $this->pdo->query($sql);
@@ -426,7 +428,8 @@ class TransaksiWorkOrderModel {
      */
     public function generateKodeKendaraan() {
         try {
-            $sql = "SELECT TOP 1 KodeKendaraan FROM FileKendaraan 
+            // Gunakan UPDLOCK dan HOLDLOCK
+            $sql = "SELECT TOP 1 KodeKendaraan FROM FileKendaraan WITH (UPDLOCK, HOLDLOCK)
                     WHERE KodeKendaraan LIKE 'KDR%' 
                     ORDER BY KodeKendaraan DESC";
             $stmt = $this->pdo->query($sql);
