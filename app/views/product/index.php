@@ -91,7 +91,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                                            id="kelompok" 
                                            class="form-select dropdown-input" 
                                            placeholder="Pilih Kelompok..."
-                                           value="<?php echo !empty($filters['kelompok']) ? htmlspecialchars(array_values(array_filter($groups, fn($g) => $g['KodeKelompok'] == $filters['kelompok']))[0]['NamaKelompok'] ?? '') : ''; ?>"
+                                           value="<?php echo !empty($filters['kelompok']) ? htmlspecialchars(array_values(array_filter($groups, function($g) use ($filters) { return $g['KodeKelompok'] == $filters['kelompok']; }))[0]['NamaKelompok'] ?? '') : ''; ?>"
                                            readonly
                                            autocomplete="off">
                                     <span class="dropdown-caret" id="kelompokCaret">
@@ -127,7 +127,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                                            id="jenis" 
                                            class="form-select dropdown-input" 
                                            placeholder="Pilih Jenis..."
-                                           value="<?php echo !empty($filters['jenis']) ? htmlspecialchars(array_values(array_filter($types, fn($t) => $t['KodeJenis'] == $filters['jenis']))[0]['NamaJenis'] ?? '') : ''; ?>"
+                                           value="<?php echo !empty($filters['jenis']) ? htmlspecialchars(array_values(array_filter($types, function($t) use ($filters) { return $t['KodeJenis'] == $filters['jenis']; }))[0]['NamaJenis'] ?? '') : ''; ?>"
                                            readonly
                                            autocomplete="off">
                                     <span class="dropdown-caret" id="jenisCaret">
@@ -163,7 +163,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                                            id="merek" 
                                            class="form-select dropdown-input" 
                                            placeholder="Pilih Merek..."
-                                           value="<?php echo !empty($filters['merek']) ? htmlspecialchars(array_values(array_filter($brands, fn($b) => $b['KodeMerek'] == $filters['merek']))[0]['NamaMerek'] ?? '') : ''; ?>"
+                                           value="<?php echo !empty($filters['merek']) ? htmlspecialchars(array_values(array_filter($brands, function($b) use ($filters) { return $b['KodeMerek'] == $filters['merek']; }))[0]['NamaMerek'] ?? '') : ''; ?>"
                                            readonly
                                            autocomplete="off">
                                     <span class="dropdown-caret" id="merekCaret">
@@ -291,12 +291,7 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                                         <i class="fas fa-sort-<?php echo $sortOrder == 'ASC' ? 'up' : 'down'; ?> ms-1"></i>
                                     <?php endif; ?>
                                 </th>
-                                <th class="sortable" data-sort="B.NamaUkuran">
-                                    Ukuran
-                                    <?php if ($sortBy == 'B.NamaUkuran'): ?>
-                                        <i class="fas fa-sort-<?php echo $sortOrder == 'ASC' ? 'up' : 'down'; ?> ms-1"></i>
-                                    <?php endif; ?>
-                                </th>
+                                <th>HPP</th>
                                 <th class="sortable text-end" data-sort="B.HargaJual">
                                     Harga
                                     <?php if ($sortBy == 'B.HargaJual'): ?>
@@ -328,7 +323,11 @@ $title = 'Informasi Harga Jual dan Stok Barang';
                                         <td><?php echo htmlspecialchars($product['Satuan']); ?></td>
                                         <td><?php echo htmlspecialchars($product['NamaMerek']); ?></td>
                                         <td><?php echo htmlspecialchars($product['NamaJenis']); ?></td>
-                                        <td><?php echo htmlspecialchars($product['NamaUkuran']); ?></td>
+                                        <td class="text-end data-harga">
+                                            <span>
+                                                <?php echo number_format($product['HargaPokok'], 0, ',', '.'); ?>
+                                            </span>
+                                        </td>
                                         <td class="text-end data-harga">
                                             <span>
                                                 <?php echo number_format($product['HargaJual'], 0, ',', '.'); ?>
@@ -564,12 +563,14 @@ function resetJenisList() {
     const jenisList = document.getElementById('jenisList');
     jenisList.innerHTML = '<div class="dropdown-item" data-code="" onclick="selectOption(\'jenis\', \'\', \'SEMUA\')">SEMUA</div>';
     <?php foreach ($types as $type): ?>
-    const div<?php echo $type['KodeJenis']; ?> = document.createElement('div');
-    div<?php echo $type['KodeJenis']; ?>.className = 'dropdown-item';
-    div<?php echo $type['KodeJenis']; ?>.setAttribute('data-code', '<?php echo htmlspecialchars($type['KodeJenis']); ?>');
-    div<?php echo $type['KodeJenis']; ?>.onclick = function() { selectOption('jenis', '<?php echo htmlspecialchars($type['KodeJenis']); ?>', '<?php echo htmlspecialchars($type['NamaJenis']); ?>'); };
-    div<?php echo $type['KodeJenis']; ?>.textContent = '<?php echo htmlspecialchars($type['NamaJenis']); ?>';
-    jenisList.appendChild(div<?php echo $type['KodeJenis']; ?>);
+    (function() {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item';
+        div.setAttribute('data-code', '<?php echo htmlspecialchars($type['KodeJenis']); ?>');
+        div.onclick = function() { selectOption('jenis', '<?php echo htmlspecialchars($type['KodeJenis']); ?>', '<?php echo htmlspecialchars($type['NamaJenis']); ?>'); };
+        div.textContent = '<?php echo htmlspecialchars($type['NamaJenis']); ?>';
+        jenisList.appendChild(div);
+    })();
     <?php endforeach; ?>
 }
 
