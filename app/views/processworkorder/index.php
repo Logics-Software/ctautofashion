@@ -328,6 +328,27 @@ $title = 'Proses Work Order';
                         </div>
                     </div>
                     
+                    <!-- Paket Transactions -->
+                    <div class="detail-section mb-4" id="detail_paket_section" style="display: none;">
+                        <h6 class="section-title"><i class="fa-solid fa-box me-2"></i>Detail Paket</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Kode Paket</th>
+                                        <th>Nama Paket</th>
+                                        <th width="25%">Tarif (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail_paket">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Tidak ada data paket</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
                     <!-- Service Transactions -->
                     <div class="detail-section mb-4">
                         <h6 class="section-title"><i class="fa-solid fa-wrench me-2"></i>Transaksi Service</h6>
@@ -601,6 +622,28 @@ function showWorkOrderDetail(noOrder) {
                 btnProses.className = 'btn btn-success'; // Warna hijau
             }
             
+            // Populate paket transactions
+            const paketSection = document.getElementById('detail_paket_section');
+            const paketBody = document.getElementById('detail_paket');
+            
+            if (data.paket && data.paket.length > 0) {
+                paketSection.style.display = 'block';
+                paketBody.innerHTML = '';
+                
+                data.paket.forEach(paket => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${escapeHtml(paket.KodePaket || '-')}</td>
+                        <td>${escapeHtml(paket.NamaPaket || '-')}</td>
+                        <td class="text-end"><strong>${formatNumber(paket.Tarif || 0)}</strong></td>
+                    `;
+                    paketBody.appendChild(row);
+                });
+            } else {
+                paketSection.style.display = 'none';
+                paketBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada data paket</td></tr>';
+            }
+            
             // Populate service transactions
             const servicesBody = document.getElementById('detail_services');
             servicesBody.innerHTML = '';
@@ -608,8 +651,9 @@ function showWorkOrderDetail(noOrder) {
             if (data.services && data.services.length > 0) {
                 data.services.forEach(service => {
                     const row = document.createElement('tr');
+                    const paketBadge = service.KodePaket ? `<br><small class="text-info"><i class="fa-solid fa-cube me-1"></i>${escapeHtml(service.KodePaket)}</small>` : '';
                     row.innerHTML = `
-                        <td>${escapeHtml(service.NamaJasa || '-')}</td>
+                        <td>${escapeHtml(service.NamaJasa || '-')}${paketBadge}</td>
                         <td>${escapeHtml(service.Mekanik || '-')}</td>
                         <td class="text-center"><span class="badge bg-info">${parseInt(service.Qty) || 0}</span></td>
                         <td class="text-end">${formatNumber(service.Tarif || 0)}</td>
@@ -628,8 +672,9 @@ function showWorkOrderDetail(noOrder) {
             if (data.items && data.items.length > 0) {
                 data.items.forEach(item => {
                     const row = document.createElement('tr');
+                    const paketBadge = item.KodePaket ? `<br><small class="text-info"><i class="fa-solid fa-cube me-1"></i>${escapeHtml(item.KodePaket)}</small>` : '';
                     row.innerHTML = `
-                        <td>${escapeHtml(item.NamaBarang || '-')}</td>
+                        <td>${escapeHtml(item.NamaBarang || '-')}${paketBadge}</td>
                         <td>${escapeHtml(item.MerekBarang || '-')}</td>
                         <td class="text-center">${escapeHtml(item.Satuan || '-')}</td>
                         <td class="text-center"><span class="badge bg-success">${parseInt(item.Qty) || 0}</span></td>

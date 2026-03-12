@@ -626,6 +626,68 @@ class TransaksiWorkOrderModel {
     }
     
     /**
+     * Search packages by KodePaket or NamaPaket
+     */
+    public function searchPaket($searchTerm = '') {
+        try {
+            $sql = "SELECT TOP 50 
+                        KodePaket, NamaPaket, TarifPaket as Tarif
+                    FROM HeaderPaket
+                    WHERE Status = 1 
+                      AND (KodePaket LIKE ? OR NamaPaket LIKE ?)
+                    ORDER BY NamaPaket";
+            
+            $searchParam = '%' . $searchTerm . '%';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$searchParam, $searchParam]);
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Error searching paket: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get package details including services and items
+     */
+    public function getPaketDetails($kodePaket) {
+        try {
+            // 1. Get Services (Jasa)
+            $sqlJasa = "SELECT DPJ.*, FJ.NamaJasa, FJ.Satuan, TK.KodeKategori, TK.NamaKategori
+                        FROM DetailPaketJasa DPJ
+                        LEFT JOIN FileJasa FJ ON DPJ.KodeJasa = FJ.KodeJasa
+                        LEFT JOIN FileTarif FT ON FJ.KodeJasa = FT.KodeJasa
+                        LEFT JOIN TabelKategoriJasa TK ON FT.KodeKategori = TK.KodeKategori
+                        WHERE DPJ.KodePaket = ? AND TK.Standart = 1";
+            
+            $stmtJasa = $this->pdo->prepare($sqlJasa);
+            $stmtJasa->execute([$kodePaket]);
+            $jasa = $stmtJasa->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Get Items (Barang)
+            $sqlBarang = "SELECT DPB.*, FB.NamaBarang, FB.Satuan
+                          FROM DetailPaketBarang DPB
+                          LEFT JOIN FileBarang FB ON DPB.KodeBarang = FB.KodeBarang
+                          WHERE DPB.KodePaket = ?";
+            
+            $stmtBarang = $this->pdo->prepare($sqlBarang);
+            $stmtBarang->execute([$kodePaket]);
+            $barang = $stmtBarang->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'jasa' => $jasa,
+                'barang' => $barang
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error getting paket details: " . $e->getMessage());
+            return ['jasa' => [], 'barang' => []];
+        }
+    }
+
+    /**
      * Get stock available for barang (StokAkhir - reserved in StokOrder)
      */
     public function getStokBarang($kodeBarang) {
@@ -698,6 +760,20 @@ class TransaksiWorkOrderModel {
                 ]);
             }
             
+            // Insert DataOrderPaket if available
+            if (!empty($data['DetailPaket'])) {
+                $sqlDataPaket = "INSERT INTO DataOrderPaket (NoOrder, KodePaket, TarifPaket, NoUrut) VALUES (?, ?, ?, ?)";
+                $stmtDataPaket = $this->pdo->prepare($sqlDataPaket);
+                foreach ($data['DetailPaket'] as $index => $paket) {
+                    $stmtDataPaket->execute([
+                        $noOrder,
+                        $paket['KodePaket'],
+                        $paket['Tarif'] ?? 0,
+                        $index + 1
+                    ]);
+                }
+            }
+
             // 2. Insert DetailOrderJasa
             if (!empty($data['DetailJasa'])) {
                 $sqlJasa = "INSERT INTO DetailOrderJasa 
@@ -706,6 +782,9 @@ class TransaksiWorkOrderModel {
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 
                 $stmtJasa = $this->pdo->prepare($sqlJasa);
+                
+                $sqlPaketJasa = "INSERT INTO DetailOPaketJasa (NoOrder, KodePaket, NoUrut) VALUES (?, ?, ?)";
+                $stmtPaketJasa = $this->pdo->prepare($sqlPaketJasa);
                 
                 foreach ($data['DetailJasa'] as $index => $jasa) {
                     $stmtJasa->execute([
@@ -721,6 +800,14 @@ class TransaksiWorkOrderModel {
                         $jasa['TotalHarga'],
                         $index + 1
                     ]);
+                    
+                    if (!empty($jasa['KodePaket'])) {
+                        $stmtPaketJasa->execute([
+                            $noOrder,
+                            $jasa['KodePaket'],
+                            $index + 1
+                        ]);
+                    }
                 }
             }
             
@@ -738,6 +825,9 @@ class TransaksiWorkOrderModel {
                                 (NoOrder, KodeBarang, TahunProduksi, Jumlah)
                                 VALUES (?, ?, ?, ?)";
                 $stmtStokOrder = $this->pdo->prepare($sqlStokOrder);
+                
+                $sqlPaketBarang = "INSERT INTO DetailOPaketBarang (NoOrder, KodePaket, NoUrut) VALUES (?, ?, ?)";
+                $stmtPaketBarang = $this->pdo->prepare($sqlPaketBarang);
                 
                 foreach ($data['DetailBarang'] as $index => $barang) {
                     // Insert DetailOrderBarang
@@ -762,6 +852,14 @@ class TransaksiWorkOrderModel {
                         '-', // TahunProduksi
                         $barang['Jumlah']
                     ]);
+                    
+                    if (!empty($barang['KodePaket'])) {
+                        $stmtPaketBarang->execute([
+                            $noOrder,
+                            $barang['KodePaket'],
+                            $index + 1
+                        ]);
+                    }
                 }
             }
             
@@ -968,9 +1066,11 @@ class TransaksiWorkOrderModel {
                             DOJ.KodeJasa, DOJ.NamaJasa, DOJ.KodeKategori, DOJ.Satuan,
                             DOJ.Jumlah, DOJ.HargaSatuan, DOJ.Discount, DOJ.DiscountRupiah,
                             DOJ.TotalHarga, DOJ.NoUrut,
-                            TK.NamaKategori
+                            TK.NamaKategori,
+                            DPJ.KodePaket
                         FROM DetailOrderJasa DOJ
                         LEFT JOIN TabelKategoriJasa TK ON DOJ.KodeKategori = TK.KodeKategori
+                        LEFT JOIN DetailOPaketJasa DPJ ON DOJ.NoOrder = DPJ.NoOrder AND DOJ.NoUrut = DPJ.NoUrut
                         WHERE DOJ.NoOrder = ?
                         ORDER BY DOJ.NoUrut";
             
@@ -984,10 +1084,12 @@ class TransaksiWorkOrderModel {
                             DOB.Jumlah, DOB.HargaSatuan, DOB.Discount, DOB.DiscountRupiah,
                             DOB.TotalHarga, DOB.NoUrut,
                             B.KodeMerek,
-                            M.NamaMerek
+                            M.NamaMerek,
+                            DPB.KodePaket
                           FROM DetailOrderBarang DOB
                           LEFT JOIN FileBarang B ON DOB.KodeBarang = B.KodeBarang
                           LEFT JOIN TabelMerek M ON B.KodeMerek = M.KodeMerek
+                          LEFT JOIN DetailOPaketBarang DPB ON DOB.NoOrder = DPB.NoOrder AND DOB.NoUrut = DPB.NoUrut
                           WHERE DOB.NoOrder = ?
                           ORDER BY DOB.NoUrut";
             
@@ -995,10 +1097,24 @@ class TransaksiWorkOrderModel {
             $stmtBarang->execute([$noOrder]);
             $barang = $stmtBarang->fetchAll(PDO::FETCH_ASSOC);
             
+            // Get detail paket
+            $sqlPaket = "SELECT 
+                            DOP.KodePaket, DOP.TarifPaket AS Tarif,
+                            HP.NamaPaket
+                         FROM DataOrderPaket DOP
+                         LEFT JOIN HeaderPaket HP ON DOP.KodePaket = HP.KodePaket
+                         WHERE DOP.NoOrder = ?
+                         ORDER BY DOP.NoUrut";
+                         
+            $stmtPaket = $this->pdo->prepare($sqlPaket);
+            $stmtPaket->execute([$noOrder]);
+            $paket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
+            
             return [
                 'header' => $header,
                 'jasa' => $jasa,
-                'barang' => $barang
+                'barang' => $barang,
+                'paket' => $paket
             ];
             
         } catch (PDOException $e) {
@@ -1043,9 +1159,11 @@ class TransaksiWorkOrderModel {
                             DOJ.KodeJasa, DOJ.NamaJasa, DOJ.KodeKategori, DOJ.Satuan,
                             DOJ.Jumlah, DOJ.HargaSatuan, DOJ.Discount, DOJ.DiscountRupiah,
                             DOJ.TotalHarga, DOJ.NoUrut,
-                            TK.NamaKategori
+                            TK.NamaKategori,
+                            DPJ.KodePaket
                         FROM DetailOrderJasa DOJ
                         LEFT JOIN TabelKategoriJasa TK ON DOJ.KodeKategori = TK.KodeKategori
+                        LEFT JOIN DetailOPaketJasa DPJ ON DOJ.NoOrder = DPJ.NoOrder AND DOJ.NoUrut = DPJ.NoUrut
                         WHERE DOJ.NoOrder = ?
                         ORDER BY DOJ.NoUrut";
             
@@ -1060,11 +1178,13 @@ class TransaksiWorkOrderModel {
                             DOB.TotalHarga, DOB.NoUrut,
                             B.KodeMerek, B.KodeJenis,
                             M.NamaMerek,
-                            J.NamaJenis
+                            J.NamaJenis,
+                            DPB.KodePaket
                           FROM DetailOrderBarang DOB
                           LEFT JOIN FileBarang B ON DOB.KodeBarang = B.KodeBarang
                           LEFT JOIN TabelMerek M ON B.KodeMerek = M.KodeMerek
                           LEFT JOIN TabelJenis J ON B.KodeJenis = J.KodeJenis
+                          LEFT JOIN DetailOPaketBarang DPB ON DOB.NoOrder = DPB.NoOrder AND DOB.NoUrut = DPB.NoUrut
                           WHERE DOB.NoOrder = ?
                           ORDER BY DOB.NoUrut";
             
@@ -1072,10 +1192,24 @@ class TransaksiWorkOrderModel {
             $stmtBarang->execute([$noOrder]);
             $barang = $stmtBarang->fetchAll(PDO::FETCH_ASSOC);
             
+            // Get detail paket
+            $sqlPaket = "SELECT 
+                            DOP.KodePaket, DOP.TarifPaket AS Tarif,
+                            HP.NamaPaket
+                         FROM DataOrderPaket DOP
+                         LEFT JOIN HeaderPaket HP ON DOP.KodePaket = HP.KodePaket
+                         WHERE DOP.NoOrder = ?
+                         ORDER BY DOP.NoUrut";
+                         
+            $stmtPaket = $this->pdo->prepare($sqlPaket);
+            $stmtPaket->execute([$noOrder]);
+            $paket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
+            
             return [
                 'header' => $header,
                 'jasa' => $jasa,
-                'barang' => $barang
+                'barang' => $barang,
+                'paket' => $paket
             ];
             
         } catch (PDOException $e) {
@@ -1154,7 +1288,10 @@ class TransaksiWorkOrderModel {
                 }
             }
             
-            // Delete existing details
+            // Delete old details
+            $this->pdo->prepare("DELETE FROM DataOrderPaket WHERE NoOrder = ?")->execute([$noOrder]);
+            $this->pdo->prepare("DELETE FROM DetailOPaketJasa WHERE NoOrder = ?")->execute([$noOrder]);
+            $this->pdo->prepare("DELETE FROM DetailOPaketBarang WHERE NoOrder = ?")->execute([$noOrder]);
             $this->pdo->prepare("DELETE FROM DetailOrderJasa WHERE NoOrder = ?")->execute([$noOrder]);
             $this->pdo->prepare("DELETE FROM DetailOrderBarang WHERE NoOrder = ?")->execute([$noOrder]);
             
@@ -1165,11 +1302,28 @@ class TransaksiWorkOrderModel {
             $deletedRows = $stmtDeleteStok->rowCount();
             error_log("Deleted $deletedRows rows from StokOrder for NoOrder: $noOrder");
             
+            // Insert DataOrderPaket
+            if (!empty($data['DetailPaket'])) {
+                $sqlDataPaket = "INSERT INTO DataOrderPaket (NoOrder, KodePaket, TarifPaket, NoUrut) VALUES (?, ?, ?, ?)";
+                $stmtDataPaket = $this->pdo->prepare($sqlDataPaket);
+                foreach ($data['DetailPaket'] as $index => $paket) {
+                    $stmtDataPaket->execute([
+                        $noOrder,
+                        $paket['KodePaket'],
+                        $paket['Tarif'] ?? 0,
+                        $index + 1
+                    ]);
+                }
+            }
+
             // Insert detail jasa
             $sqlJasa = "INSERT INTO DetailOrderJasa 
                         (NoOrder, KodeJasa, NamaJasa, Satuan, KodeKategori, Jumlah, HargaSatuan, Discount, DiscountRupiah, TotalHarga, NoUrut)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtJasa = $this->pdo->prepare($sqlJasa);
+            
+            $sqlPaketJasa = "INSERT INTO DetailOPaketJasa (NoOrder, KodePaket, NoUrut) VALUES (?, ?, ?)";
+            $stmtPaketJasa = $this->pdo->prepare($sqlPaketJasa);
             
             foreach ($data['DetailJasa'] as $index => $jasa) {
                 $discountRupiah = ($jasa['HargaSatuan'] * $jasa['Jumlah']) * ($jasa['Discount'] / 100);
@@ -1186,6 +1340,14 @@ class TransaksiWorkOrderModel {
                     $jasa['TotalHarga'],
                     $index + 1
                 ]);
+                
+                if (!empty($jasa['KodePaket'])) {
+                    $stmtPaketJasa->execute([
+                        $noOrder,
+                        $jasa['KodePaket'],
+                        $index + 1
+                    ]);
+                }
             }
             
             // Insert detail barang & stok order
@@ -1193,6 +1355,9 @@ class TransaksiWorkOrderModel {
                           (NoOrder, KodeBarang, NamaBarang, Satuan, TahunProduksi, Jumlah, HargaSatuan, Discount, DiscountRupiah, TotalHarga, NoUrut)
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtBarang = $this->pdo->prepare($sqlBarang);
+            
+            $sqlPaketBarang = "INSERT INTO DetailOPaketBarang (NoOrder, KodePaket, NoUrut) VALUES (?, ?, ?)";
+            $stmtPaketBarang = $this->pdo->prepare($sqlPaketBarang);
             
             // Use MERGE statement to avoid duplicate key error in StokOrder
             $sqlStokOrder = "MERGE INTO StokOrder AS target
@@ -1246,6 +1411,14 @@ class TransaksiWorkOrderModel {
                     // If duplicate item exists, accumulate quantity
                     $processedItems[$itemKey] += $barang['Jumlah'];
                     error_log("Duplicate item found: {$barang['KodeBarang']}, accumulating quantity");
+                }
+                
+                if (!empty($barang['KodePaket'])) {
+                    $stmtPaketBarang->execute([
+                        $noOrder,
+                        $barang['KodePaket'],
+                        $index + 1
+                    ]);
                 }
             }
             

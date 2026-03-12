@@ -298,6 +298,56 @@ class TransaksiWorkOrderController {
     }
     
     /**
+     * AJAX: Search paket
+     */
+    public function searchPaket() {
+        header('Content-Type: application/json');
+        
+        try {
+            $searchTerm = $_GET['term'] ?? '';
+            $paketList = $this->model->searchPaket($searchTerm);
+            
+            // Format for Select2
+            $results = array_map(function($paket) {
+                $tarif = isset($paket['Tarif']) ? number_format((float)$paket['Tarif'], 0, ',', '.') : '0';
+                $label = $paket['NamaPaket'] . ' | Rp ' . $tarif;
+
+                return [
+                    'id' => $paket['KodePaket'],
+                    'text' => $label,
+                    'data' => $paket
+                ];
+            }, $paketList);
+            
+            echo json_encode(['results' => $results]);
+            
+        } catch (Exception $e) {
+            error_log("Error searching paket: " . $e->getMessage());
+            echo json_encode(['results' => []]);
+        }
+        exit();
+    }
+    
+    /**
+     * AJAX: Get paket details
+     */
+    public function getPaketDetails() {
+        header('Content-Type: application/json');
+        
+        try {
+            $kodePaket = $_GET['code'] ?? '';
+            $details = $this->model->getPaketDetails($kodePaket);
+            
+            echo json_encode($details);
+            
+        } catch (Exception $e) {
+            error_log("Error getting paket details: " . $e->getMessage());
+            echo json_encode(['jasa' => [], 'barang' => []]);
+        }
+        exit();
+    }
+
+    /**
      * AJAX: Get barang by code
      */
     public function getBarang() {

@@ -165,6 +165,8 @@ $router->addRoute('POST', '/transaksi-work-order/save-customer', 'TransaksiWorkO
 $router->addRoute('GET', '/transaksi-work-order/get-merek-list', 'TransaksiWorkOrderController', 'getMerekList');
 $router->addRoute('GET', '/transaksi-work-order/get-model-list', 'TransaksiWorkOrderController', 'getModelList');
 $router->addRoute('POST', '/transaksi-work-order/save-vehicle', 'TransaksiWorkOrderController', 'saveVehicle');
+$router->addRoute('GET', '/transaksi-work-order/search-paket', 'TransaksiWorkOrderController', 'searchPaket');
+$router->addRoute('GET', '/transaksi-work-order/get-paket-details', 'TransaksiWorkOrderController', 'getPaketDetails');
 $router->addRoute('GET', '/transaksi-work-order/download-pdf', 'TransaksiWorkOrderController', 'downloadPDF');
 $router->addRoute('POST', '/transaksi-work-order/save-print-queue', 'TransaksiWorkOrderController', 'savePrintQueue');
 

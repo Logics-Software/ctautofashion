@@ -32,7 +32,10 @@ function esc($s) {
         .no-border { border: none; }
         .summary { width: 40%; float: right; margin-top: 8px; }
         @media print {
-            body { -webkit-print-color-adjust: exact; }
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
             .no-print { display: none; }
         }
     </style>

@@ -295,10 +295,12 @@ class WorkOrderModel {
             $sqlService = "SELECT DOJ.NamaJasa, ISNULL(M.NamaMontir,'') AS Mekanik,
                                 DOJ.Jumlah AS Qty, 
                                 DOJ.HargaSatuan AS Tarif,
-                                DOJ.TotalHarga AS Total
+                                DOJ.TotalHarga AS Total,
+                                DPJ.KodePaket
                             FROM DetailOrderJasa DOJ
                             INNER JOIN HeaderOrder HO ON DOJ.NoOrder = HO.NoOrder
                             LEFT JOIN FileMontir M ON HO.KodeMontir = M.KodeMontir
+                            LEFT JOIN DetailOPaketJasa DPJ ON DOJ.NoOrder = DPJ.NoOrder AND DOJ.NoUrut = DPJ.NoUrut
                             WHERE DOJ.NoOrder = ?";
             
             $stmtService = $this->pdo->prepare($sqlService);
@@ -312,24 +314,40 @@ class WorkOrderModel {
                               DOB.Satuan, 
                               DOB.Jumlah AS Qty, 
                               DOB.HargaSatuan AS Harga,
-                              DOB.TotalHarga AS Total
+                              DOB.TotalHarga AS Total,
+                              DPB.KodePaket
                        FROM DetailOrderBarang DOB
 					   INNER JOIN FileBarang B ON DOB.KodeBarang = B.KodeBarang
 					   INNER JOIN TabelMerek M ON B.KodeMerek = M.KodeMerek
 					   INNER JOIN TabelJenis J ON B.KodeJenis = J.KodeJenis
+                       LEFT JOIN DetailOPaketBarang DPB ON DOB.NoOrder = DPB.NoOrder AND DOB.NoUrut = DPB.NoUrut
                        WHERE DOB.NoOrder = ?";
             
             $stmtItem = $this->pdo->prepare($sqlItem);
             $stmtItem->execute([$noOrder]);
             $items = $stmtItem->fetchAll(PDO::FETCH_ASSOC);
             
+            // Get detail paket
+            $sqlPaket = "SELECT 
+                            DOP.KodePaket, DOP.TarifPaket AS Tarif,
+                            HP.NamaPaket
+                         FROM DataOrderPaket DOP
+                         LEFT JOIN HeaderPaket HP ON DOP.KodePaket = HP.KodePaket
+                         WHERE DOP.NoOrder = ?
+                         ORDER BY DOP.NoUrut";
+                         
+            $stmtPaket = $this->pdo->prepare($sqlPaket);
+            $stmtPaket->execute([$noOrder]);
+            $paket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
+
             // Add status text
             $header['StatusText'] = $this->getStatusText($header['StatusOrder']);
             
             return [
                 'header' => $header,
                 'services' => $services,
-                'items' => $items
+                'items' => $items,
+                'paket' => $paket
             ];
             
         } catch (PDOException $e) {

@@ -153,6 +153,38 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- -------------------------------------------------------------------------- -->
+                        <!-- Pilih Paket Section -->
+                        <!-- -------------------------------------------------------------------------- -->
+                        <div class="bg-transparent d-flex justify-content-between align-items-center mb-2 mt-4" id="paketTitle">
+                            <h6 class="mb-0">
+                                <i class="fas fa-box-open me-2"></i>Pilih Paket
+                            </h6>
+                            <button type="button" class="btn btn-success btn-sm" id="btnAddPaket">
+                                <i class="fas fa-plus me-1"></i>Tambah Paket
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive" id="paketSection">
+                            <table class="table table-sm table-striped table-bordered table-hover" id="tablePaket">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="5%">No</th>
+                                        <th width="20%">Kode Paket</th>
+                                        <th width="40%">Nama Paket</th>
+                                        <th width="25%">Tarif</th>
+                                        <th width="10%">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyPaket">
+                                    <tr class="text-center">
+                                        <td colspan="5" class="text-muted">Belum ada data paket</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- -------------------------------------------------------------------------- -->
                         
                         <!-- -------------------------------------------------------------------------- -->
                         <!-- Detail Jasa Section -->
@@ -170,25 +202,26 @@
                             <table class="table table-sm table-striped table-bordered table-hover" id="tableJasa">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th width="5%">No</th>
-                                        <th width="20%">Kode/Nama Jasa</th>
-                                        <th width="10%">Satuan</th>
-                                        <th width="15%">Kategori</th>
-                                        <th width="10%">Jumlah</th>
+                                        <th width="4%">No</th>
+                                        <th width="12%">Kode Paket</th>
+                                        <th width="18%">Kode/Nama Jasa</th>
+                                        <th width="8%">Satuan</th>
+                                        <th width="12%">Kategori</th>
+                                        <th width="8%">Jumlah</th>
                                         <th width="12%">Tarif</th>
-                                        <th width="10%">Disc (%)</th>
+                                        <th width="8%">Disc (%)</th>
                                         <th width="13%">Total</th>
                                         <th width="5%">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyJasa">
                                     <tr class="text-center">
-                                        <td colspan="9" class="text-muted">Belum ada data jasa</td>
+                                        <td colspan="10" class="text-muted">Belum ada data jasa</td>
                                     </tr>
                                 </tbody>
                                 <tfoot>
                                     <tr class="table-light fw-bold">
-                                        <td colspan="7" class="text-end">Total Jasa:</td>
+                                        <td colspan="8" class="text-end">Total Jasa:</td>
                                         <td class="text-end" id="totalJasa">Rp 0</td>
                                         <td></td>
                                     </tr>
@@ -214,25 +247,26 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th width="4%">No</th>
-                                        <th width="18%">Kode/Nama Barang</th>
+                                        <th width="12%">Kode Paket</th>
+                                        <th width="16%">Kode/Nama Barang</th>
                                         <th width="8%">Satuan</th>
-                                        <th width="12%">Merek</th>
-                                        <th width="12%">Jenis</th>
+                                        <th width="10%">Merek</th>
+                                        <th width="10%">Jenis</th>
                                         <th width="8%">Jumlah</th>
                                         <th width="12%">Harga</th>
-                                        <th width="8%">Disc (%)</th>
-                                        <th width="13%">Total</th>
-                                        <th width="5%">Aksi</th>
+                                        <th width="7%">Disc (%)</th>
+                                        <th width="11%">Total</th>
+                                        <th width="4%">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyBarang">
                                     <tr class="text-center">
-                                        <td colspan="10" class="text-muted">Belum ada data barang</td>
+                                        <td colspan="11" class="text-muted">Belum ada data barang</td>
                                     </tr>
                                 </tbody>
                                 <tfoot>
                                     <tr class="table-light fw-bold">
-                                        <td colspan="8" class="text-end">Total Barang:</td>
+                                        <td colspan="9" class="text-end">Total Barang:</td>
                                         <td class="text-end" id="totalBarang">Rp 0</td>
                                         <td></td>
                                     </tr>
@@ -484,6 +518,27 @@
                                     </tr>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paket Transactions -->
+                    <div class="detail-section mb-4" id="detail_paket_section" style="display: none;">
+                        <h6 class="section-title"><i class="fa-solid fa-box me-2"></i>Detail Paket</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Kode Paket</th>
+                                        <th>Nama Paket</th>
+                                        <th width="25%">Tarif (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail_paket">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Tidak ada data paket</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     
@@ -826,14 +881,16 @@
 <script>
 // Global variables (outside DOMContentLoaded for access by edit functions)
 const basePath = '<?php echo dirname($_SERVER['SCRIPT_NAME']); ?>';
-let customerChoice, kendaraanChoice, montirChoice, pickerChoice;
+let customerChoice, kendaraanChoice, montirChoice, pickerChoice, paketChoice;
 let detailJasaCounter = 0;
 let detailBarangCounter = 0;
+let detailPaketCounter = 0;
 // Modal instances
 let confirmCancelModal, confirmSaveModal, confirmDeleteModal;
 let addCustomerModal, addKendaraanModal, detailModal;
 let detailJasaData = [];
 let detailBarangData = [];
+let detailPaketData = [];
 let currentEditNoOrder = '';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -933,6 +990,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 50);
     });
+
+    // Paket Choice Initialization moved to modal...
     
     // Load customers on search
     document.getElementById('selectCustomer').addEventListener('search', function(e) {
@@ -1095,6 +1154,227 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('customerInfo').style.display = 'none';
         }
     });
+    
+    // Add Paket Row
+    document.getElementById('btnAddPaket').addEventListener('click', function() {
+        showPaketModal();
+    });
+
+    function showPaketModal() {
+        const modalHtml = `
+            <div class="modal fade" id="modalPaket" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Tambah Paket</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Pilih Paket</label>
+                                <select class="form-select" id="selectPaketModal">
+                                    <option value="">Cari paket...</option>
+                                </select>
+                            </div>
+                            <div id="paketDetailForm" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label">Nama Paket</label>
+                                        <input type="text" class="form-control" id="paketNama" readonly>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Tarif</label>
+                                        <input type="text" class="form-control" id="paketTarif" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-primary" id="btnSavePaket">Tambahkan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const oldModal = document.getElementById('modalPaket');
+        if (oldModal) oldModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modalElement = document.getElementById('modalPaket');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        paketChoice = new Choices('#selectPaketModal', {
+            searchEnabled: true,
+            placeholder: true,
+            itemSelectText: '',
+            placeholderValue: 'Cari paket...',
+            searchResultLimit: 50,
+            renderChoiceLimit: 50
+        });
+        
+        let currentPaketData = null;
+        
+        document.getElementById('selectPaketModal').addEventListener('search', function(e) {
+            const searchTerm = e.detail.value;
+            if (searchTerm.length >= 1) {
+                fetch(`${basePath}/transaksi-work-order/search-paket?term=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            const choices = data.results.map(item => ({
+                                value: item.id,
+                                label: item.text,
+                                customProperties: item.data
+                            }));
+                            paketChoice.setChoices(choices, 'value', 'label', true);
+                        } else {
+                            paketChoice.clearChoices();
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+        
+        document.getElementById('selectPaketModal').addEventListener('showDropdown', function() {
+            if (paketChoice._currentState.choices.length === 0) {
+                fetch(`${basePath}/transaksi-work-order/search-paket?term=`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            const choices = data.results.map(item => ({
+                                value: item.id,
+                                label: item.text,
+                                customProperties: item.data
+                            }));
+                            paketChoice.setChoices(choices, 'value', 'label', true);
+                        }
+                    });
+            }
+        });
+        
+        document.getElementById('selectPaketModal').addEventListener('change', function(e) {
+            const value = e.target.value;
+            if (value) {
+                const selectedData = paketChoice.getValue().customProperties;
+                if (selectedData) {
+                    currentPaketData = selectedData;
+                    document.getElementById('paketNama').value = selectedData.NamaPaket || '';
+                    document.getElementById('paketTarif').value = 'Rp ' + formatNumber(selectedData.Tarif || 0);
+                    document.getElementById('paketDetailForm').style.display = 'block';
+                }
+            } else {
+                currentPaketData = null;
+                document.getElementById('paketDetailForm').style.display = 'none';
+            }
+        });
+        
+        document.getElementById('btnSavePaket').addEventListener('click', function() {
+            if (!currentPaketData) {
+                alert('Pilih paket terlebih dahulu!');
+                return;
+            }
+            
+            const btnSave = document.getElementById('btnSavePaket');
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            fetch(`${basePath}/transaksi-work-order/get-paket-details?code=${encodeURIComponent(currentPaketData.KodePaket)}`)
+                .then(response => response.json())
+                .then(data => {
+                    detailPaketCounter++;
+                    detailPaketData.push({
+                        id: detailPaketCounter,
+                        KodePaket: currentPaketData.KodePaket,
+                        NamaPaket: currentPaketData.NamaPaket,
+                        Tarif: parseFloat(currentPaketData.Tarif) || 0
+                    });
+                    
+                    if (data.jasa && data.jasa.length > 0) {
+                        data.jasa.forEach(jasa => {
+                            detailJasaCounter++;
+                            detailJasaData.push({
+                                id: detailJasaCounter,
+                                KodePaket: currentPaketData.KodePaket,
+                                KodeJasa: jasa.KodeJasa,
+                                NamaJasa: jasa.NamaJasa,
+                                Satuan: jasa.Satuan,
+                                KodeKategori: jasa.KodeKategori || '',
+                                Kategori: jasa.NamaKategori || 'NORMAL',
+                                Jumlah: parseFloat(jasa.Jumlah) || 0,
+                                HargaSatuan: parseFloat(jasa.HargaSatuan) || 0,
+                                Discount: 0,
+                                DiscountRupiah: 0,
+                                TotalHarga: parseFloat(jasa.TotalHarga) || 0
+                            });
+                        });
+                    }
+                    
+                    if (data.barang && data.barang.length > 0) {
+                        data.barang.forEach(barang => {
+                            detailBarangCounter++;
+                            detailBarangData.push({
+                                id: detailBarangCounter,
+                                KodePaket: currentPaketData.KodePaket,
+                                KodeBarang: barang.KodeBarang,
+                                NamaBarang: barang.NamaBarang,
+                                Satuan: barang.Satuan,
+                                Merek: '-',
+                                Jenis: '-',
+                                Jumlah: parseFloat(barang.Jumlah) || 0,
+                                HargaSatuan: parseFloat(barang.HargaSatuan) || 0,
+                                Discount: 0,
+                                DiscountRupiah: 0,
+                                TotalHarga: parseFloat(barang.TotalHarga) || 0
+                            });
+                        });
+                    }
+                    
+                    window.renderPaketTable();
+                    renderJasaTable();
+                    renderBarangTable();
+                    calculateTotals();
+                    modal.hide();
+                })
+                .catch(error => {
+                    console.error('Error getting paket details:', error);
+                    alert('Terjadi kesalahan saat mengambil detail paket');
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = 'Tambahkan';
+                });
+        });
+    }
+
+    // Render Paket Table (assigned to global window)
+    window.renderPaketTable = function() {
+        const tbody = document.getElementById('tbodyPaket');
+        tbody.innerHTML = '';
+        
+        if (detailPaketData.length === 0) {
+            tbody.innerHTML = '<tr class="text-center"><td colspan="5" class="text-muted">Belum ada data paket</td></tr>';
+            return;
+        }
+        
+        detailPaketData.forEach((paket, index) => {
+            const deleteBtn = `<button type="button" class="btn btn-danger btn-sm" onclick="removePaket(${paket.id})">
+                                    <i class="fas fa-trash"></i>
+                               </button>`;
+
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr class="table-info">
+                    <td>${index + 1}</td>
+                    <td><small><strong>${paket.KodePaket}</strong></small></td>
+                    <td>${paket.NamaPaket}</td>
+                    <td class="text-end">Rp ${formatNumber(paket.Tarif)}</td>
+                    <td class="text-center">
+                        ${deleteBtn}
+                    </td>
+                </tr>
+            `);
+        });
+    };
     
     // Vehicle change event
     document.getElementById('selectKendaraan').addEventListener('change', function(e) {
@@ -2164,14 +2444,24 @@ document.addEventListener('DOMContentLoaded', function() {
         tbody.innerHTML = '';
         
         if (detailJasaData.length === 0) {
-            tbody.innerHTML = '<tr class="text-center"><td colspan="9" class="text-muted">Belum ada data jasa</td></tr>';
+            tbody.innerHTML = '<tr class="text-center"><td colspan="10" class="text-muted">Belum ada data jasa</td></tr>';
             return;
         }
         
         detailJasaData.forEach((jasa, index) => {
+            const isFromPaket = jasa.KodePaket ? true : false;
+            const deleteBtn = isFromPaket 
+                ? `<button type="button" class="btn btn-secondary btn-sm" disabled title="Item Paket tidak bisa dihapus">
+                        <i class="fas fa-trash-can"></i>
+                   </button>`
+                : `<button type="button" class="btn btn-danger btn-sm" onclick="removeJasa(${jasa.id})">
+                        <i class="fas fa-trash-can"></i>
+                   </button>`;
+
             tbody.insertAdjacentHTML('beforeend', `
-                <tr>
+                <tr class="${isFromPaket ? 'table-info' : ''}">
                     <td>${index + 1}</td>
+                    <td><small>${jasa.KodePaket || '-'}</small></td>
                     <td><small><strong>${jasa.KodeJasa}</strong><br>${jasa.NamaJasa}</small></td>
                     <td>${jasa.Satuan}</td>
                     <td>${jasa.Kategori}</td>
@@ -2180,9 +2470,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td class="text-end">${jasa.Discount}%</td>
                     <td class="text-end">Rp ${formatNumber(jasa.TotalHarga)}</td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeJasa(${jasa.id})">
-                            <i class="fas fa-trash-can"></i>
-                        </button>
+                        ${deleteBtn}
                     </td>
                 </tr>
             `);
@@ -2195,14 +2483,24 @@ document.addEventListener('DOMContentLoaded', function() {
         tbody.innerHTML = '';
         
         if (detailBarangData.length === 0) {
-            tbody.innerHTML = '<tr class="text-center"><td colspan="10" class="text-muted">Belum ada data barang</td></tr>';
+            tbody.innerHTML = '<tr class="text-center"><td colspan="11" class="text-muted">Belum ada data barang</td></tr>';
             return;
         }
         
         detailBarangData.forEach((barang, index) => {
+            const isFromPaket = barang.KodePaket ? true : false;
+            const deleteBtn = isFromPaket 
+                ? `<button type="button" class="btn btn-secondary btn-sm" disabled title="Item Paket tidak bisa dihapus">
+                        <i class="fas fa-trash"></i>
+                   </button>`
+                : `<button type="button" class="btn btn-danger btn-sm" onclick="removeBarang(${barang.id})">
+                        <i class="fas fa-trash"></i>
+                   </button>`;
+
             tbody.insertAdjacentHTML('beforeend', `
-                <tr>
+                <tr class="${isFromPaket ? 'table-info' : ''}">
                     <td>${index + 1}</td>
+                    <td><small>${barang.KodePaket || '-'}</small></td>
                     <td><small><strong>${barang.KodeBarang}</strong><br>${barang.NamaBarang}</small></td>
                     <td>${barang.Satuan}</td>
                     <td>${barang.Merek}</td>
@@ -2212,18 +2510,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td class="text-end">${barang.Discount}%</td>
                     <td class="text-end">Rp ${formatNumber(barang.TotalHarga)}</td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeBarang(${barang.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        ${deleteBtn}
                     </td>
                 </tr>
             `);
         });
     };
     
-    // Variables for delete confirmation
     let pendingDeleteItem = null;
     let pendingDeleteType = null;
+    
+    // Remove Paket
+    window.removePaket = function(id) {
+        pendingDeleteItem = id;
+        pendingDeleteType = 'paket';
+        confirmDeleteModal.show();
+    };
     
     // Remove Jasa
     window.removeJasa = function(id) {
@@ -2262,10 +2564,13 @@ document.addEventListener('DOMContentLoaded', function() {
         kendaraanChoice.removeActiveItems();
         montirChoice.removeActiveItems();
         pickerChoice.removeActiveItems();
+        if (paketChoice) paketChoice.removeActiveItems();
         document.getElementById('customerInfo').style.display = 'none';
         document.getElementById('kendaraanInfo').style.display = 'none';
         detailJasaData = [];
         detailBarangData = [];
+        detailPaketData = [];
+        if (typeof window.renderPaketTable === 'function') window.renderPaketTable();
         renderJasaTable();
         renderBarangTable();
         calculateTotals();
@@ -2441,6 +2746,7 @@ document.addEventListener('DOMContentLoaded', function() {
             TotalOrder: totalOrder,
             DetailJasa: detailJasaData,
             DetailBarang: detailBarangData,
+            DetailPaket: detailPaketData,
             TandaTangan: null
         };
         
@@ -2560,6 +2866,22 @@ document.addEventListener('DOMContentLoaded', function() {
             detailBarangData = detailBarangData.filter(item => item.id !== pendingDeleteItem);
             renderBarangTable();
             calculateTotals();
+        } else if (pendingDeleteType === 'paket') {
+            const paketToDelete = detailPaketData.find(item => item.id === pendingDeleteItem);
+            if (paketToDelete) {
+                const kodePaket = paketToDelete.KodePaket;
+                // Remove paket
+                detailPaketData = detailPaketData.filter(item => item.id !== pendingDeleteItem);
+                // Remove associated jasa
+                detailJasaData = detailJasaData.filter(item => item.KodePaket !== kodePaket);
+                // Remove associated barang
+                detailBarangData = detailBarangData.filter(item => item.KodePaket !== kodePaket);
+                
+                window.renderPaketTable();
+                renderJasaTable();
+                renderBarangTable();
+                calculateTotals();
+            }
         }
         
         // Reset pending delete
@@ -2735,6 +3057,28 @@ function showWorkOrderDetail(noOrder) {
             document.getElementById('detail_totalbarang').innerHTML = '<strong>Rp ' + formatNumber(data.header.TotalBarang || 0) + '</strong>';
             document.getElementById('detail_totalorder').innerHTML = '<strong>Rp ' + formatNumber(data.header.TotalOrder || 0) + '</strong>';
             
+            // Populate paket transactions
+            const paketSection = document.getElementById('detail_paket_section');
+            const paketBody = document.getElementById('detail_paket');
+            
+            if (data.paket && data.paket.length > 0) {
+                paketSection.style.display = 'block';
+                paketBody.innerHTML = '';
+                
+                data.paket.forEach(paket => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${escapeHtml(paket.KodePaket || '-')}</td>
+                        <td>${escapeHtml(paket.NamaPaket || '-')}</td>
+                        <td class="text-end"><strong>Rp ${formatNumber(paket.Tarif || 0)}</strong></td>
+                    `;
+                    paketBody.appendChild(row);
+                });
+            } else {
+                paketSection.style.display = 'none';
+                paketBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada data paket</td></tr>';
+            }
+            
             // Populate service transactions
             const servicesBody = document.getElementById('detail_services');
             servicesBody.innerHTML = '';
@@ -2742,8 +3086,9 @@ function showWorkOrderDetail(noOrder) {
             if (data.jasa && data.jasa.length > 0) {
                 data.jasa.forEach(jasa => {
                     const row = document.createElement('tr');
+                    const paketBadge = jasa.KodePaket ? `<br><small class="text-info"><i class="fa-solid fa-cube me-1"></i>${escapeHtml(jasa.KodePaket)}</small>` : '';
                     row.innerHTML = `
-                        <td>${escapeHtml(jasa.NamaJasa || '-')}</td>
+                        <td>${escapeHtml(jasa.NamaJasa || '-')}${paketBadge}</td>
                         <td>${escapeHtml(jasa.NamaKategori || '-')}</td>
                         <td class="text-center"><span class="badge bg-primary">${parseInt(jasa.Jumlah) || 0}</span></td>
                         <td class="text-end">Rp ${formatNumber(jasa.HargaSatuan || 0)}</td>
@@ -2763,8 +3108,9 @@ function showWorkOrderDetail(noOrder) {
             if (data.barang && data.barang.length > 0) {
                 data.barang.forEach(item => {
                     const row = document.createElement('tr');
+                    const paketBadge = item.KodePaket ? `<br><small class="text-info"><i class="fa-solid fa-cube me-1"></i>${escapeHtml(item.KodePaket)}</small>` : '';
                     row.innerHTML = `
-                        <td>${escapeHtml(item.NamaBarang || '-')}</td>
+                        <td>${escapeHtml(item.NamaBarang || '-')}${paketBadge}</td>
                         <td>${escapeHtml(item.NamaMerek || '-')}</td>
                         <td class="text-center">${escapeHtml(item.Satuan || '-')}</td>
                         <td class="text-center"><span class="badge bg-success">${parseInt(item.Jumlah) || 0}</span></td>
@@ -2992,8 +3338,23 @@ function populateFormForEdit(data) {
     // Clear existing detail arrays
     detailJasaData = [];
     detailBarangData = [];
+    detailPaketData = [];
     detailJasaCounter = 0;
     detailBarangCounter = 0;
+    detailPaketCounter = 0;
+    
+    // Populate Detail Paket
+    if (data.paket && data.paket.length > 0) {
+        data.paket.forEach(paket => {
+            detailPaketCounter++;
+            detailPaketData.push({
+                id: detailPaketCounter,
+                KodePaket: paket.KodePaket,
+                NamaPaket: paket.NamaPaket,
+                Tarif: parseFloat(paket.Tarif) || 0
+            });
+        });
+    }
     
     // Populate Detail Jasa
     if (data.jasa && data.jasa.length > 0) {
@@ -3001,6 +3362,7 @@ function populateFormForEdit(data) {
             detailJasaCounter++;
             detailJasaData.push({
                 id: detailJasaCounter,
+                KodePaket: jasa.KodePaket || '',
                 KodeJasa: jasa.KodeJasa,
                 NamaJasa: jasa.NamaJasa,
                 Satuan: jasa.Satuan,
@@ -3020,6 +3382,7 @@ function populateFormForEdit(data) {
             detailBarangCounter++;
             detailBarangData.push({
                 id: detailBarangCounter,
+                KodePaket: barang.KodePaket || '',
                 KodeBarang: barang.KodeBarang,
                 NamaBarang: barang.NamaBarang,
                 Satuan: barang.Satuan,
@@ -3034,6 +3397,7 @@ function populateFormForEdit(data) {
     }
     
     // Render tables
+    if (typeof window.renderPaketTable === 'function') window.renderPaketTable();
     renderJasaTable();
     renderBarangTable();
     calculateTotals();
