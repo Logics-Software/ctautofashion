@@ -202,6 +202,19 @@ class ProcessWorkOrderModel {
             $stmtPaket->execute([$noOrder]);
             $paket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
 
+            // Get detail montir
+            $sqlMontir = "SELECT DOM.KodeMontir, FM.NamaMontir
+                          FROM DetailOrderMontir DOM
+                          LEFT JOIN FileMontir FM ON DOM.KodeMontir = FM.KodeMontir
+                          WHERE DOM.NoOrder = ?";
+            $stmtMontir = $this->pdo->prepare($sqlMontir);
+            $stmtMontir->execute([$noOrder]);
+            $montir = $stmtMontir->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Update services to show joined mechanics or keep as is if header mechanic is enough
+            // But usually we want to see all mechanics assigned to the WO
+            $joinedMekanik = !empty($montir) ? implode(', ', array_column($montir, 'NamaMontir')) : ($header['Marketing'] ?? '-');
+
             // Add status text
             $header['StatusText'] = $this->getStatusText($header['StatusOrder']);
             
@@ -209,7 +222,8 @@ class ProcessWorkOrderModel {
                 'header' => $header,
                 'services' => $services,
                 'items' => $items,
-                'paket' => $paket
+                'paket' => $paket,
+                'montir' => $montir
             ];
             
         } catch (PDOException $e) {
@@ -267,6 +281,24 @@ class ProcessWorkOrderModel {
                 $stmtInsertKartu = $this->pdo->prepare($sqlInsertKartu);
                 $stmtInsertKartu->execute([$noOrder, $userID, $currentDate]);
             }
+
+            // 3. Update KartuHistori (Requirement 2 - Process)
+            $sqlUpdateHistori = "UPDATE KartuHistori 
+                                SET TanggalProses = CAST(GETDATE() AS DATE),
+                                    JamProses = FORMAT(GETDATE(), 'HH:mm')
+                                WHERE NoOrder = ?";
+            $stmtUpdateHistori = $this->pdo->prepare($sqlUpdateHistori);
+            $stmtUpdateHistori->execute([$noOrder]);
+
+            // If not found in KartuHistori, insert it (upsert)
+            if ($stmtUpdateHistori->rowCount() === 0) {
+                $sqlInsertHistori = "INSERT INTO KartuHistori 
+                                    (NoOrder, TanggalOrder, jamOrder, TanggalProses, TanggalSelesai, TanggalFaktur, JamProses, JamSelesai, JamFaktur)
+                                    VALUES (?, CAST(GETDATE() AS DATE), FORMAT(GETDATE(), 'HH:mm'), CAST(GETDATE() AS DATE), '1900-01-01', '1900-01-01', FORMAT(GETDATE(), 'HH:mm'), '', '')";
+                $this->pdo->prepare($sqlInsertHistori)->execute([$noOrder]);
+            }
+
+
             
             // Commit transaction
             $this->pdo->commit();
@@ -316,6 +348,24 @@ class ProcessWorkOrderModel {
                 $stmtInsertKartu = $this->pdo->prepare($sqlInsertKartu);
                 $stmtInsertKartu->execute([$noOrder, $userID, $currentDate]);
             }
+
+            // 3. Update KartuHistori (Requirement 3 - Selesai)
+            $sqlUpdateHistori = "UPDATE KartuHistori 
+                                SET TanggalSelesai = CAST(GETDATE() AS DATE),
+                                    JamSelesai = FORMAT(GETDATE(), 'HH:mm')
+                                WHERE NoOrder = ?";
+            $stmtUpdateHistori = $this->pdo->prepare($sqlUpdateHistori);
+            $stmtUpdateHistori->execute([$noOrder]);
+
+            // If not found in KartuHistori, insert it (upsert)
+            if ($stmtUpdateHistori->rowCount() === 0) {
+                $sqlInsertHistori = "INSERT INTO KartuHistori 
+                                    (NoOrder, TanggalOrder, jamOrder, TanggalProses, TanggalSelesai, TanggalFaktur, JamProses, JamSelesai, JamFaktur)
+                                    VALUES (?, CAST(GETDATE() AS DATE), FORMAT(GETDATE(), 'HH:mm'), '1900-01-01', CAST(GETDATE() AS DATE), '1900-01-01', '', FORMAT(GETDATE(), 'HH:mm'), '')";
+                $this->pdo->prepare($sqlInsertHistori)->execute([$noOrder]);
+            }
+
+
             
             // Commit transaction
             $this->pdo->commit();

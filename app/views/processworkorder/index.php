@@ -285,6 +285,11 @@ $title = 'Proses Work Order';
                                         <td id="detail_warna">-</td>
                                     </tr>
                                     <tr>
+                                        <td><strong>Mekanik</strong></td>
+                                        <td>:</td>
+                                        <td id="detail_mekanik">-</td>
+                                    </tr>
+                                    <tr>
                                         <td><strong>Marketing</strong></td>
                                         <td>:</td>
                                         <td id="detail_marketing">-</td>
@@ -600,10 +605,16 @@ function showWorkOrderDetail(noOrder) {
             document.getElementById('detail_kendaraan').textContent = data.header.NamaKendaraan || '-';
             document.getElementById('detail_nopolisi').textContent = data.header.NoPolisi || '-';
             document.getElementById('detail_warna').textContent = data.header.Warna || '-';
-            document.getElementById('detail_marketing').textContent = data.header.Marketing || '-';
-            document.getElementById('detail_customer').textContent = data.header.NamaCustomer || '-';
-            document.getElementById('detail_alamat').textContent = data.header.AlamatCustomer || '-';
             document.getElementById('detail_telepon').textContent = data.header.NoTelepon || '-';
+            
+            // Populate multiple mechanics
+            if (data.montir && data.montir.length > 0) {
+                document.getElementById('detail_mekanik').textContent = data.montir.map(m => m.NamaMontir).join(', ');
+            } else {
+                document.getElementById('detail_mekanik').textContent = data.header.Mekanik || '-';
+            }
+            
+            document.getElementById('detail_marketing').textContent = data.header.Marketing || '-';
             document.getElementById('detail_totaljasa').innerHTML = '<strong>' + formatNumber(data.header.TotalJasa || 0) + '</strong>';
             document.getElementById('detail_totalbarang').innerHTML = '<strong>' + formatNumber(data.header.TotalBarang || 0) + '</strong>';
             document.getElementById('detail_totalorder').innerHTML = '<strong>' + formatNumber(data.header.TotalOrder || 0) + '</strong>';
@@ -652,9 +663,13 @@ function showWorkOrderDetail(noOrder) {
                 data.services.forEach(service => {
                     const row = document.createElement('tr');
                     const paketBadge = service.KodePaket ? `<br><small class="text-info"><i class="fa-solid fa-cube me-1"></i>${escapeHtml(service.KodePaket)}</small>` : '';
+                    const mekanikList = data.montir && data.montir.length > 0 ? 
+                        data.montir.map(m => m.NamaMontir).join(', ') : 
+                        (service.Mekanik || '-');
+
                     row.innerHTML = `
                         <td>${escapeHtml(service.NamaJasa || '-')}${paketBadge}</td>
-                        <td>${escapeHtml(service.Mekanik || '-')}</td>
+                        <td>${escapeHtml(mekanikList)}</td>
                         <td class="text-center"><span class="badge bg-info">${parseInt(service.Qty) || 0}</span></td>
                         <td class="text-end">${formatNumber(service.Tarif || 0)}</td>
                         <td class="text-end"><strong>${formatNumber(service.Total || 0)}</strong></td>

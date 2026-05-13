@@ -117,7 +117,7 @@
                                     <label class="form-label">
                                         Mekanik <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select select-montir" id="selectMontir" name="KodeMontir">
+                                    <select class="form-select select-montir" id="selectMontir" name="KodeMontir[]" multiple>
                                         <option value="">Pilih Montir...</option>
                                     </select>
                                 </div>
@@ -2603,7 +2603,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (!kodeMontir) {
+        if (!kodeMontir || kodeMontir.length === 0) {
             alert('Montir (Mekanik) harus diisi!');
             return;
         }
@@ -2726,7 +2726,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prepare data
         const kodeCustomer = document.getElementById('selectCustomer').value;
         const kodeKendaraan = document.getElementById('selectKendaraan').value;
-        const kodeMontir = document.getElementById('selectMontir').value;
+        const kodeMontir = montirChoice.getValue(true); // Will return an array if multiple
         const kodePicker = document.getElementById('selectPicker').value;
         
         const totalJasa = detailJasaData.reduce((sum, item) => sum + item.TotalHarga, 0);
@@ -3046,7 +3046,11 @@ function showWorkOrderDetail(noOrder) {
                 formatDate(data.header.TanggalOrder) : '-';
             document.getElementById('detail_kendaraan').textContent = data.header.NamaKendaraan || '-';
             document.getElementById('detail_nopolisi').textContent = data.header.NoPolisi || '-';
-            document.getElementById('detail_mekanik').textContent = data.header.NamaMontir || '-';
+            if (data.montir && data.montir.length > 0) {
+                document.getElementById('detail_mekanik').textContent = data.montir.map(m => m.NamaMontir).join(', ');
+            } else {
+                document.getElementById('detail_mekanik').textContent = data.header.NamaMontir || '-';
+            }
             document.getElementById('detail_marketing').textContent = data.header.NamaPicker || '-';
             document.getElementById('detail_customer').textContent = data.header.NamaCustomer || '-';
             document.getElementById('detail_alamat').textContent = data.header.AlamatCustomer || '-';
@@ -3316,12 +3320,22 @@ function populateFormForEdit(data) {
             console.error('Error fetching vehicle data:', error);
         });
     
-    // Populate Montir
-    montirChoice.setChoices([{
-        value: header.KodeMontir,
-        label: header.NamaMontir,
-        selected: true
-    }], 'value', 'label', true);
+    // Populate Montir (Multiple)
+    if (data.montir && data.montir.length > 0) {
+        const selectedMontirs = data.montir.map(m => ({
+            value: m.KodeMontir,
+            label: m.NamaMontir,
+            selected: true
+        }));
+        montirChoice.setChoices(selectedMontirs, 'value', 'label', true);
+    } else if (header.KodeMontir) {
+        // Fallback to header if DetailOrderMontir is empty
+        montirChoice.setChoices([{
+            value: header.KodeMontir,
+            label: header.NamaMontir,
+            selected: true
+        }], 'value', 'label', true);
+    }
     
     // Populate Picker
     pickerChoice.setChoices([{

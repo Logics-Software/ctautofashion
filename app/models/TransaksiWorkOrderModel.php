@@ -736,7 +736,7 @@ class TransaksiWorkOrderModel {
                 $noOrder,
                 $data['KodeCustomer'],
                 $data['KodeKendaraan'],
-                $data['KodeMontir'],
+                is_array($data['KodeMontir']) ? $data['KodeMontir'][0] : $data['KodeMontir'], // Ambil montir pertama untuk Header
                 $data['KodePicker'],
                 $data['Keterangan'] ?? '',
                 $data['KMAwal'] ?? 0,
@@ -746,6 +746,19 @@ class TransaksiWorkOrderModel {
                 $data['TotalOrder'] ?? 0,
                 $_SESSION['user_id']
             ]);
+
+            // 1b. Insert DetailOrderMontir
+            if (!empty($data['KodeMontir'])) {
+                $sqlMontir = "INSERT INTO DetailOrderMontir (NoOrder, KodeMontir, [Default]) VALUES (?, ?, ?)";
+                $stmtMontir = $this->pdo->prepare($sqlMontir);
+                $montirs = is_array($data['KodeMontir']) ? $data['KodeMontir'] : [$data['KodeMontir']];
+                foreach ($montirs as $index => $m) {
+                    if (!empty($m)) {
+                        $isDefault = ($index === 0) ? 1 : 0;
+                        $stmtMontir->execute([$noOrder, $m, $isDefault]);
+                    }
+                }
+            }
             
             // Insert signature into HeaderOrderKonfirmasi table
             if (!empty($data['TandaTangan'])) {
@@ -904,6 +917,14 @@ class TransaksiWorkOrderModel {
                 '',                             // BayarUserID = ''
                 '1900/01/01'                    // BayarTanggal = '01/01/1900'
             ]);
+
+            // 7. Insert KartuHistori (Requirement 1)
+            $sqlInsertHistori = "INSERT INTO KartuHistori 
+                                (NoOrder, TanggalOrder, jamOrder, TanggalProses, TanggalSelesai, TanggalFaktur, JamProses, JamSelesai, JamFaktur)
+                                VALUES (?, CAST(GETDATE() AS DATE), FORMAT(GETDATE(), 'HH:mm'), CAST(GETDATE() AS DATE), '1900-01-01', '1900-01-01', FORMAT(GETDATE(), 'HH:mm'), '', '')";
+            $this->pdo->prepare($sqlInsertHistori)->execute([$noOrder]);
+
+
             
             // Commit transaction
             $this->pdo->commit();
@@ -1110,11 +1131,21 @@ class TransaksiWorkOrderModel {
             $stmtPaket->execute([$noOrder]);
             $paket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
             
+            // Get detail montir
+            $sqlMontir = "SELECT DOM.KodeMontir, FM.NamaMontir
+                          FROM DetailOrderMontir DOM
+                          LEFT JOIN FileMontir FM ON DOM.KodeMontir = FM.KodeMontir
+                          WHERE DOM.NoOrder = ?";
+            $stmtMontir = $this->pdo->prepare($sqlMontir);
+            $stmtMontir->execute([$noOrder]);
+            $montir = $stmtMontir->fetchAll(PDO::FETCH_ASSOC);
+            
             return [
                 'header' => $header,
                 'jasa' => $jasa,
                 'barang' => $barang,
-                'paket' => $paket
+                'paket' => $paket,
+                'montir' => $montir
             ];
             
         } catch (PDOException $e) {
@@ -1205,11 +1236,21 @@ class TransaksiWorkOrderModel {
             $stmtPaket->execute([$noOrder]);
             $paket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
             
+            // Get detail montir
+            $sqlMontir = "SELECT DOM.KodeMontir, FM.NamaMontir
+                          FROM DetailOrderMontir DOM
+                          LEFT JOIN FileMontir FM ON DOM.KodeMontir = FM.KodeMontir
+                          WHERE DOM.NoOrder = ?";
+            $stmtMontir = $this->pdo->prepare($sqlMontir);
+            $stmtMontir->execute([$noOrder]);
+            $montir = $stmtMontir->fetchAll(PDO::FETCH_ASSOC);
+            
             return [
                 'header' => $header,
                 'jasa' => $jasa,
                 'barang' => $barang,
-                'paket' => $paket
+                'paket' => $paket,
+                'montir' => $montir
             ];
             
         } catch (PDOException $e) {
@@ -1243,7 +1284,7 @@ class TransaksiWorkOrderModel {
             $stmtHeader->execute([
                 $data['KodeCustomer'],
                 $data['KodeKendaraan'],
-                $data['KodeMontir'],
+                is_array($data['KodeMontir']) ? $data['KodeMontir'][0] : $data['KodeMontir'], // Ambil montir pertama untuk Header
                 $data['KodePicker'],
                 $data['Keterangan'],
                 $data['KMAwal'],
@@ -1253,6 +1294,20 @@ class TransaksiWorkOrderModel {
                 $data['TotalOrder'],
                 $noOrder
             ]);
+
+            // Update DetailOrderMontir
+            $this->pdo->prepare("DELETE FROM DetailOrderMontir WHERE NoOrder = ?")->execute([$noOrder]);
+            if (!empty($data['KodeMontir'])) {
+                $sqlMontir = "INSERT INTO DetailOrderMontir (NoOrder, KodeMontir, [Default]) VALUES (?, ?, ?)";
+                $stmtMontir = $this->pdo->prepare($sqlMontir);
+                $montirs = is_array($data['KodeMontir']) ? $data['KodeMontir'] : [$data['KodeMontir']];
+                foreach ($montirs as $index => $m) {
+                    if (!empty($m)) {
+                        $isDefault = ($index === 0) ? 1 : 0;
+                        $stmtMontir->execute([$noOrder, $m, $isDefault]);
+                    }
+                }
+            }
             
             // Update or insert signature in HeaderOrderKonfirmasi table
             if (!empty($data['TandaTangan'])) {
@@ -1443,6 +1498,31 @@ class TransaksiWorkOrderModel {
                                 SelesaiTanggal = ISNULL(SelesaiTanggal, '1900-01-01')
                               WHERE NoOrder = ?";
             $this->pdo->prepare($sqlKartuOrder)->execute([$noOrder]);
+
+            // Update KartuHistori (Requirement 1 - Edit)
+            $sqlCheckHistori = "SELECT NoOrder, TanggalProses FROM KartuHistori WHERE NoOrder = ?";
+            $stmtCheckHistori = $this->pdo->prepare($sqlCheckHistori);
+            $stmtCheckHistori->execute([$noOrder]);
+            $histori = $stmtCheckHistori->fetch(PDO::FETCH_ASSOC);
+            
+            if ($histori) {
+                // If found and TanggalProses is '1900-01-01' or empty
+                if (empty($histori['TanggalProses']) || $histori['TanggalProses'] == '1900-01-01') {
+                    $sqlUpdateHistori = "UPDATE KartuHistori 
+                                        SET TanggalOrder = CAST(GETDATE() AS DATE),
+                                            jamOrder = FORMAT(GETDATE(), 'HH:mm')
+                                        WHERE NoOrder = ?";
+                    $this->pdo->prepare($sqlUpdateHistori)->execute([$noOrder]);
+                }
+            } else {
+                // Not found, insert new
+                $sqlInsertHistori = "INSERT INTO KartuHistori 
+                                    (NoOrder, TanggalOrder, jamOrder, TanggalProses, TanggalSelesai, TanggalFaktur, JamProses, JamSelesai, JamFaktur)
+                                    VALUES (?, CAST(GETDATE() AS DATE), FORMAT(GETDATE(), 'HH:mm'), '1900-01-01', '1900-01-01', '1900-01-01', '', '', '')";
+                $this->pdo->prepare($sqlInsertHistori)->execute([$noOrder]);
+            }
+
+
             
             $this->pdo->commit();
             
